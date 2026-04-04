@@ -3,8 +3,8 @@
 
   <!-- Breadcrumb -->
   <nav class="breadcrumb" aria-label="Breadcrumb">
-    <a href="/">WTFpkg</a><span class="sep" aria-hidden="true">/</span>
-    <a href="/#pm={{ .Params.packageManager }}">{{ .Params.packageManager }}</a><span class="sep" aria-hidden="true">/</span>
+    <a href="{{ "/" | relURL }}">WTFpkg</a><span class="sep" aria-hidden="true">/</span>
+    <a href="{{ (printf "/#pm=%s" .Params.packageManager) | relURL }}">{{ .Params.packageManager }}</a><span class="sep" aria-hidden="true">/</span>
     <span aria-current="page">{{ .Params.name }}</span>
   </nav>
 

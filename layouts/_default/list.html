@@ -20,7 +20,7 @@
       {{ if eq .Params.severity "high" }}{{ $highCount = add $highCount 1 }}{{ end }}
     {{ end }}
 
-    <a href="/pm/{{ $pm }}/" class="pm-card pm-card-{{ $pm }}">
+    <a href="{{ (printf "/pm/%s/" $pm) | relURL }}" class="pm-card pm-card-{{ $pm }}">
       <div class="pm-card-accent" aria-hidden="true"></div>
       <div class="pm-card-body">
         <div class="pm-card-top">
