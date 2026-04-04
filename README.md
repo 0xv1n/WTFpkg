@@ -32,4 +32,3 @@ Want to add a technique or a new package manager? See [CONTRIBUTING.md](CONTRIBU
 ## License
 
 [MIT](LICENSE)
-
