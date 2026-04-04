@@ -1,0 +1,24 @@
+baseURL = "https://0xv1n.github.io/WTFpkg/"
+languageCode = "en-us"
+title = "WTFpkg"
+enableRobotsTXT = true
+
+[params]
+  description = "WTFpkg — A defensive security resource documenting how package managers can be abused by adversaries."
+  tagline = "Know the techniques. Defend the supply chain."
+
+[taxonomies]
+  packagemanager = "packagemanagers"
+  category = "categories"
+
+[markup]
+  [markup.highlight]
+    style = "dracula"
+    lineNos = false
+    guessSyntax = true
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
+[outputs]
+  home = ["HTML", "JSON"]

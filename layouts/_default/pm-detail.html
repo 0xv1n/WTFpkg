@@ -1,0 +1,71 @@
+{{ define "main" }}
+{{ $pmKey := .Params.pmKey }}
+{{ $allTechniques := where .Site.RegularPages "Section" "techniques" }}
+{{ $techniques := where $allTechniques ".Params.packageManager" $pmKey }}
+{{ $categories := slice }}
+{{ range $techniques }}
+  {{ $cat := .Params.category }}
+  {{ if not (in $categories $cat) }}
+    {{ $categories = $categories | append $cat }}
+  {{ end }}
+{{ end }}
+
+<div class="pm-listing-header">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">WTFpkg</a><span class="sep" aria-hidden="true">/</span>
+    <span aria-current="page">{{ .Title }}</span>
+  </nav>
+  <div class="pm-listing-top">
+    <div>
+      <h1 class="pm-listing-title pm-color-{{ $pmKey }}">{{ .Title }}</h1>
+      <p class="pm-listing-desc">{{ .Description }}</p>
+    </div>
+    <span class="pm-listing-count">{{ len $techniques }} techniques</span>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar" role="search" aria-label="Filter techniques">
+  <div class="search-wrapper">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="technique-search" class="search-input" placeholder="Search techniques..." autocomplete="off" aria-label="Search techniques">
+  </div>
+  <select id="filter-category" class="filter-select" aria-label="Filter by category">
+    <option value="">All categories</option>
+    {{ range $categories }}
+    <option value="{{ . }}">{{ . }}</option>
+    {{ end }}
+  </select>
+  <select id="filter-severity" class="filter-select" aria-label="Filter by severity">
+    <option value="">All severities</option>
+    <option value="critical">Critical</option>
+    <option value="high">High</option>
+    <option value="medium">Medium</option>
+    <option value="low">Low</option>
+  </select>
+  <span id="results-count" class="results-count" aria-live="polite"></span>
+</div>
+
+<!-- Technique cards -->
+<div class="technique-grid" id="technique-grid">
+  {{ range $techniques }}
+  <a href="{{ .RelPermalink }}" class="technique-card technique-card-{{ $pmKey }}" data-name="{{ .Params.name }}" data-description="{{ .Params.description }}" data-category="{{ .Params.category }}" data-severity="{{ .Params.severity }}">
+    <div class="card-top">
+      <span class="severity-pill severity-{{ .Params.severity }}">{{ .Params.severity }}</span>
+      <span class="card-category">{{ .Params.category }}</span>
+    </div>
+    <h3 class="card-title">{{ .Params.name }}</h3>
+    <p class="card-desc">{{ .Params.description | truncate 140 }}</p>
+    <div class="card-bottom">
+      {{ range .Params.platform }}
+      <span class="platform-tag">{{ . }}</span>
+      {{ end }}
+    </div>
+  </a>
+  {{ end }}
+</div>
+
+<div class="no-results" id="no-results" style="display: none;" role="status">
+  <p>No techniques match your filters.</p>
+</div>
+{{ end }}

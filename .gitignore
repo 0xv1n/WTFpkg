@@ -1,0 +1,24 @@
+# Hugo build output
+public/
+resources/
+.hugo_build.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Block Contributors from merging their AI agent stuffs
+.claude
+CLAUDE.md
+
+# Logs
+logs
+*.log

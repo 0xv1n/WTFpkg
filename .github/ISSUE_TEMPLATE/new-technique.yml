@@ -1,0 +1,76 @@
+name: New Technique
+description: Submit a package manager abuse technique
+title: "[Technique] "
+labels: ["new-technique"]
+body:
+  - type: dropdown
+    id: package-manager
+    attributes:
+      label: Package Manager
+      options:
+        - apt
+        - pip
+        - npm
+        - gem
+        - cargo
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: input
+    id: technique-name
+    attributes:
+      label: Technique Name
+      placeholder: "e.g. NPM Lifecycle Script Abuse"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - critical
+        - high
+        - medium
+        - low
+    validations:
+      required: true
+
+  - type: input
+    id: category
+    attributes:
+      label: Category
+      placeholder: "e.g. Code Execution, Supply Chain, Source Manipulation, Signature Bypass"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: "What does this technique do? How does it work?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: attack-scenario
+    attributes:
+      label: Attack Scenario
+      description: "Provide at least one attack scenario with commands/code."
+      render: bash
+    validations:
+      required: true
+
+  - type: textarea
+    id: detection
+    attributes:
+      label: Detection
+      description: "How can defenders detect this technique?"
+      render: bash
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: "Links to blog posts, CVEs, advisories, or documentation."

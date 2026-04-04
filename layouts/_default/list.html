@@ -1,0 +1,43 @@
+{{ define "main" }}
+{{ if .IsHome }}
+{{ $techniques := where .Site.RegularPages "Section" "techniques" }}
+
+<!-- Package Manager Cards -->
+{{ $pmOrder := slice "apt" "pip" "npm" "gem" "cargo" }}
+{{ $pmLabels := dict "apt" "apt / dpkg" "pip" "pip / PyPI" "npm" "npm" "gem" "RubyGems" "cargo" "Cargo" }}
+{{ $pmDescs := dict "apt" "Debian & Ubuntu" "pip" "Python" "npm" "Node.js" "gem" "Ruby" "cargo" "Rust" }}
+{{ $pmLongDescs := dict "apt" "Repository manipulation, maintainer script execution, GPG signature bypass, package spoofing, and man-in-the-middle attacks." "pip" "Arbitrary code execution via setup.py, dependency confusion, typosquatting campaigns, and requirements.txt index manipulation." "npm" "Lifecycle script abuse, dependency confusion, account hijacking, .npmrc tampering, and npx remote execution." "gem" "Native C extension code execution, RubyGems plugin hooks, gem source manipulation, and Rakefile build scripts." "cargo" "Build script (build.rs) execution, procedural macro abuse, crate extraction attacks, and cargo install from untrusted git repos." }}
+
+<div class="pm-cards">
+  {{ range $pm := $pmOrder }}
+    {{ $pmTechniques := where $techniques ".Params.packageManager" $pm }}
+    {{ $label := index $pmLabels $pm }}
+    {{ $eco := index $pmDescs $pm }}
+    {{ $longDesc := index $pmLongDescs $pm }}
+    {{ $critCount := 0 }}{{ $highCount := 0 }}
+    {{ range $pmTechniques }}
+      {{ if eq .Params.severity "critical" }}{{ $critCount = add $critCount 1 }}{{ end }}
+      {{ if eq .Params.severity "high" }}{{ $highCount = add $highCount 1 }}{{ end }}
+    {{ end }}
+
+    <a href="/pm/{{ $pm }}/" class="pm-card pm-card-{{ $pm }}">
+      <div class="pm-card-accent" aria-hidden="true"></div>
+      <div class="pm-card-body">
+        <div class="pm-card-top">
+          <span class="pm-card-eco">{{ $eco }}</span>
+          <span class="pm-card-count">{{ len $pmTechniques }} techniques</span>
+        </div>
+        <h2 class="pm-card-name">{{ $label }}</h2>
+        <p class="pm-card-desc">{{ $longDesc }}</p>
+        <div class="pm-card-bottom">
+          {{ if gt $critCount 0 }}<span class="severity-pill severity-critical">{{ $critCount }} critical</span>{{ end }}
+          {{ if gt $highCount 0 }}<span class="severity-pill severity-high">{{ $highCount }} high</span>{{ end }}
+        </div>
+      </div>
+      <div class="pm-card-arrow" aria-hidden="true">&#x2192;</div>
+    </a>
+  {{ end }}
+</div>
+
+{{ end }}
+{{ end }}

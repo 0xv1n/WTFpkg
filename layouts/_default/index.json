@@ -1,0 +1,18 @@
+{{ $techniques := where .Site.RegularPages "Section" "techniques" -}}
+{
+  "techniques": [
+    {{- range $i, $t := $techniques }}
+    {{- if $i }},{{ end }}
+    {
+      "name": {{ .Params.name | jsonify }},
+      "slug": {{ .Params.slug | jsonify }},
+      "packageManager": {{ .Params.packageManager | jsonify }},
+      "category": {{ .Params.category | jsonify }},
+      "severity": {{ .Params.severity | jsonify }},
+      "platform": {{ .Params.platform | jsonify }},
+      "description": {{ .Params.description | truncate 150 | jsonify }},
+      "url": {{ .RelPermalink | jsonify }}
+    }
+    {{- end }}
+  ]
+}

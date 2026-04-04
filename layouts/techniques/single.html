@@ -1,0 +1,120 @@
+{{ define "main" }}
+<article class="technique-detail">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">WTFpkg</a><span class="sep" aria-hidden="true">/</span>
+    <a href="/#pm={{ .Params.packageManager }}">{{ .Params.packageManager }}</a><span class="sep" aria-hidden="true">/</span>
+    <span aria-current="page">{{ .Params.name }}</span>
+  </nav>
+
+  <!-- Header -->
+  <header class="technique-header">
+    <h1>{{ .Params.name }}</h1>
+    <div class="technique-meta">
+      <span class="badge badge-{{ .Params.packageManager }}">{{ .Params.packageManager }}</span>
+      <span class="category-tag">{{ .Params.category }}</span>
+      <span class="severity-pill severity-{{ .Params.severity }}">{{ .Params.severity }}</span>
+      {{ range .Params.platform }}
+      <span class="platform-tag">{{ . }}</span>
+      {{ end }}
+    </div>
+  </header>
+
+  <!-- Sticky section nav -->
+  <nav class="section-nav" aria-label="Page sections">
+    {{ with .Params.prerequisites }}<a href="#prerequisites">Prerequisites</a>{{ end }}
+    {{ with .Params.attackScenarios }}<a href="#attacks">Attacks</a>{{ end }}
+    {{ with .Params.detection }}<a href="#detection">Detection</a>{{ end }}
+    {{ with .Params.mitigation }}<a href="#mitigation">Mitigation</a>{{ end }}
+    {{ with .Params.references }}<a href="#references">References</a>{{ end }}
+  </nav>
+
+  <!-- Description -->
+  <div class="technique-description">
+    {{ .Params.description }}
+  </div>
+
+  <!-- Prerequisites -->
+  {{ with .Params.prerequisites }}
+  <section class="detail-section" id="prerequisites">
+    <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Prerequisites</h2>
+    <ul class="prereq-list">
+      {{ range . }}
+      <li>{{ . }}</li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  <!-- Attack Scenarios -->
+  {{ with .Params.attackScenarios }}
+  <section class="detail-section" id="attacks">
+    <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Attack Scenarios</h2>
+    {{ range . }}
+    <div class="scenario-card">
+      <h3>{{ .title }}</h3>
+      <p>{{ .description }}</p>
+      {{ range .commands }}
+      <div class="code-block-wrapper">
+        {{ with .label }}<div class="code-label">{{ . }}</div>{{ end }}
+        <button class="copy-btn" aria-label="Copy code to clipboard">Copy</button>
+        <pre><code class="language-{{ .language | default "bash" }}">{{ .code }}</code></pre>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+  </section>
+  {{ end }}
+
+  <!-- Detection -->
+  {{ with .Params.detection }}
+  <section class="detail-section" id="detection">
+    <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Detection</h2>
+    {{ range . }}
+    <div class="detection-card">
+      <h3>{{ .title }}</h3>
+      <p>{{ .description }}</p>
+      {{ range .commands }}
+      <div class="code-block-wrapper">
+        <button class="copy-btn" aria-label="Copy code to clipboard">Copy</button>
+        <pre><code class="language-{{ .language | default "bash" }}">{{ .code }}</code></pre>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+  </section>
+  {{ end }}
+
+  <!-- Mitigation -->
+  {{ with .Params.mitigation }}
+  <section class="detail-section" id="mitigation">
+    <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Mitigation</h2>
+    <ul class="mitigation-list">
+      {{ range . }}
+      <li>{{ . }}</li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+  <!-- References -->
+  {{ with .Params.references }}
+  <section class="detail-section" id="references">
+    <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> References</h2>
+    <ul class="reference-list">
+      {{ range . }}
+      <li>
+        <a href="{{ .url }}" target="_blank" rel="noopener">
+          <span class="ref-icon" aria-hidden="true">&#x2197;</span> {{ .title }}
+        </a>
+      </li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+
+</article>
+
+<button class="back-to-top" id="back-to-top" aria-label="Back to top" title="Back to top">&#x2191;</button>
+{{ end }}
