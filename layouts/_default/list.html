@@ -3,10 +3,10 @@
 {{ $techniques := where .Site.RegularPages "Section" "techniques" }}
 
 <!-- Package Manager Cards -->
-{{ $pmOrder := slice "apt" "pip" "npm" "gem" "cargo" }}
-{{ $pmLabels := dict "apt" "apt / dpkg" "pip" "pip / PyPI" "npm" "npm" "gem" "RubyGems" "cargo" "Cargo" }}
-{{ $pmDescs := dict "apt" "Debian & Ubuntu" "pip" "Python" "npm" "Node.js" "gem" "Ruby" "cargo" "Rust" }}
-{{ $pmLongDescs := dict "apt" "Repository manipulation, maintainer script execution, GPG signature bypass, package spoofing, and man-in-the-middle attacks." "pip" "Arbitrary code execution via setup.py, dependency confusion, typosquatting campaigns, and requirements.txt index manipulation." "npm" "Lifecycle script abuse, dependency confusion, account hijacking, .npmrc tampering, and npx remote execution." "gem" "Native C extension code execution, RubyGems plugin hooks, gem source manipulation, and Rakefile build scripts." "cargo" "Build script (build.rs) execution, procedural macro abuse, crate extraction attacks, and cargo install from untrusted git repos." }}
+{{ $pmOrder := slice "apt" "pip" "npm" "gem" "cargo" "pacman" }}
+{{ $pmLabels := dict "apt" "apt / dpkg" "pip" "pip / PyPI" "npm" "npm" "gem" "RubyGems" "cargo" "Cargo" "pacman" "pacman" }}
+{{ $pmDescs := dict "apt" "Debian & Ubuntu" "pip" "Python" "npm" "Node.js" "gem" "Ruby" "cargo" "Rust" "pacman" "Arch Linux" }}
+{{ $pmLongDescs := dict "apt" "Repository manipulation, maintainer script execution, GPG signature bypass, package spoofing, and man-in-the-middle attacks." "pip" "Arbitrary code execution via setup.py, dependency confusion, typosquatting campaigns, and requirements.txt index manipulation." "npm" "Lifecycle script abuse, dependency confusion, account hijacking, .npmrc tampering, and npx remote execution." "gem" "Native C extension code execution, RubyGems plugin hooks, gem source manipulation, and Rakefile build scripts." "cargo" "Build script (build.rs) execution, procedural macro abuse, crate extraction attacks, and cargo install from untrusted git repos." "pacman" "PKGBUILD code execution, install scriptlet abuse, unsigned package injection, malicious repository injection, and AUR dependency confusion." }}
 
 <div class="pm-cards">
   {{ range $pm := $pmOrder }}
