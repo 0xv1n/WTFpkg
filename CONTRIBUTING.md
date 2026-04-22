@@ -63,7 +63,7 @@ updated: 2026-04-02
 
 | Field | Valid Values |
 |-------|-------------|
-| `packageManager` | `apt`, `pip`, `npm`, `gem`, `cargo` |
+| `packageManager` | `apt`, `pip`, `npm`, `gem`, `cargo`, `brew` |
 | `severity` | `critical`, `high`, `medium`, `low` |
 | `category` | `Code Execution`, `Supply Chain`, `Source Manipulation`, `Signature Bypass`, or a new one if justified |
 | `platform` | `Linux`, `macOS`, `Windows` (list all that apply) |

@@ -33,6 +33,7 @@
   --pm-npm: #f87171;
   --pm-gem: #fb7185;
   --pm-cargo: #fb923c;
+  --pm-brew: #fbbf24;
 
   --sev-critical: #ef4444;
   --sev-high: #f59e0b;
@@ -365,6 +366,7 @@ main { flex: 1; }
 .pm-card:nth-child(3) { animation-delay: 120ms; }
 .pm-card:nth-child(4) { animation-delay: 180ms; }
 .pm-card:nth-child(5) { animation-delay: 240ms; }
+.pm-card:nth-child(6) { animation-delay: 300ms; }
 
 .pm-card:hover {
   transform: translateY(-2px);
@@ -375,6 +377,7 @@ main { flex: 1; }
 .pm-card-npm:hover { border-color: rgba(248, 113, 113, 0.45); box-shadow: 0 6px 24px rgba(248, 113, 113, 0.10), inset 0 1px 0 rgba(248, 113, 113, 0.08); }
 .pm-card-gem:hover { border-color: rgba(251, 113, 133, 0.45); box-shadow: 0 6px 24px rgba(251, 113, 133, 0.10), inset 0 1px 0 rgba(251, 113, 133, 0.08); }
 .pm-card-cargo:hover { border-color: rgba(251, 146, 60, 0.45); box-shadow: 0 6px 24px rgba(251, 146, 60, 0.10), inset 0 1px 0 rgba(251, 146, 60, 0.08); }
+.pm-card-brew:hover { border-color: rgba(251, 191, 36, 0.45); box-shadow: 0 6px 24px rgba(251, 191, 36, 0.10), inset 0 1px 0 rgba(251, 191, 36, 0.08); }
 
 .pm-card-accent {
   height: 4px;
@@ -389,6 +392,7 @@ main { flex: 1; }
 .pm-card-npm .pm-card-accent { background: linear-gradient(90deg, var(--pm-npm), #fca5a5); }
 .pm-card-gem .pm-card-accent { background: linear-gradient(90deg, var(--pm-gem), #fda4af); }
 .pm-card-cargo .pm-card-accent { background: linear-gradient(90deg, var(--pm-cargo), #fdba74); }
+.pm-card-brew .pm-card-accent { background: linear-gradient(90deg, var(--pm-brew), #fde68a); }
 
 .pm-card-body {
   flex: 1;
@@ -431,6 +435,7 @@ main { flex: 1; }
 .pm-card-npm .pm-card-name { color: var(--pm-npm); }
 .pm-card-gem .pm-card-name { color: var(--pm-gem); }
 .pm-card-cargo .pm-card-name { color: var(--pm-cargo); }
+.pm-card-brew .pm-card-name { color: var(--pm-brew); }
 
 .pm-card-desc {
   font-size: 0.75rem;
@@ -464,6 +469,7 @@ main { flex: 1; }
 .pm-card-npm:hover .pm-card-arrow { color: var(--pm-npm); }
 .pm-card-gem:hover .pm-card-arrow { color: var(--pm-gem); }
 .pm-card-cargo:hover .pm-card-arrow { color: var(--pm-cargo); }
+.pm-card-brew:hover .pm-card-arrow { color: var(--pm-brew); }
 
 /* --- PM Drill-down Listing --- */
 .pm-listing-header {
@@ -490,6 +496,7 @@ main { flex: 1; }
 .pm-color-npm { color: var(--pm-npm); }
 .pm-color-gem { color: var(--pm-gem); }
 .pm-color-cargo { color: var(--pm-cargo); }
+.pm-color-brew { color: var(--pm-brew); }
 
 .pm-listing-desc {
   font-size: 0.875rem;
@@ -544,6 +551,7 @@ main { flex: 1; }
 .technique-card-npm:hover { border-color: rgba(248, 113, 113, 0.3); }
 .technique-card-gem:hover { border-color: rgba(251, 113, 133, 0.3); }
 .technique-card-cargo:hover { border-color: rgba(251, 146, 60, 0.3); }
+.technique-card-brew:hover { border-color: rgba(251, 191, 36, 0.3); }
 
 .technique-card.hidden {
   display: none;
@@ -612,6 +620,7 @@ main { flex: 1; }
 .badge-npm { background: rgba(248, 113, 113, 0.12); color: var(--pm-npm); border: 1px solid rgba(248, 113, 113, 0.2); }
 .badge-gem { background: rgba(251, 113, 133, 0.12); color: var(--pm-gem); border: 1px solid rgba(251, 113, 133, 0.2); }
 .badge-cargo { background: rgba(251, 146, 60, 0.12); color: var(--pm-cargo); border: 1px solid rgba(251, 146, 60, 0.2); }
+.badge-brew { background: rgba(251, 191, 36, 0.12); color: var(--pm-brew); border: 1px solid rgba(251, 191, 36, 0.2); }
 
 .severity-pill {
   display: inline-block;
