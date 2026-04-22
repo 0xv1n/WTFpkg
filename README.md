@@ -15,6 +15,7 @@ A defensive security resource documenting how package managers can be abused by 
 | npm | Node.js | Lifecycle scripts, dependency confusion, npx abuse |
 | RubyGems | Ruby | Native extensions, plugin hooks, gem source manipulation |
 | Cargo | Rust | build.rs execution, proc macros, crate extraction |
+| Homebrew | macOS | Formula Ruby execution, Cask flight blocks, malicious taps, .pkg privilege escalation |
 
 ## Local Development
 
