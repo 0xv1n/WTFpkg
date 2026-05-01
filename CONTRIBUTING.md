@@ -108,7 +108,7 @@ This requires a few more steps:
 1. Fork the repo and create a feature branch
 2. Add your technique or package manager
 3. Test locally with `hugo server --buildDrafts`
-4. Submit a PR using the provided template
+4. Submit a PR using the provided template and attach screenshots of technique functioning.
 5. Ensure the Hugo build passes in CI
 
 ## Severity Guidelines
