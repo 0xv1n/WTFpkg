@@ -8,7 +8,7 @@ platform:
   - "Linux"
   - "macOS"
   - "Windows"
-description: "When a package is installed via `pip install`, pip executes the package's setup.py file using the installing user's privileges. This allows an attacker to embed arbitrary Python code in setup.py that runs automatically during installation, with no sandboxing or isolation. The executed code has full access to the filesystem, environment variables, network, and any resources available to the user running pip. This is one of the most fundamental and widely exploited attack vectors in the Python packaging ecosystem."
+description: "When pip installs or builds a package through a legacy setuptools path, it may execute the package's setup.py file using the installing user's privileges. This allows an attacker to embed arbitrary Python code in setup.py that runs during build or installation, with no sandboxing beyond whatever isolation the user provides. The executed code has access to the filesystem, environment variables, network, and any resources available to the user running pip. This remains a fundamental attack vector for legacy source-distribution workflows in the Python packaging ecosystem.<sup><a href=\"#hist-1\">[1]</a></sup>"
 prerequisites:
   - "Victim installs a malicious package via pip (either from PyPI or a direct source)"
   - "pip is configured to build packages from source (default behavior for packages without wheels)"
@@ -143,15 +143,21 @@ detection:
           # Search for suspicious patterns
           grep -rn "os.system\|subprocess\|urllib\|socket\|exec(\|eval(" */setup.py
         language: "bash"
-  - title: "Prefer packages with pyproject.toml and pre-built wheels"
-    description: "Modern Python packages use pyproject.toml with declarative metadata that does not execute arbitrary code. Installing pre-built wheels (.whl) also avoids setup.py execution entirely."
+  - title: "Prefer pre-built wheels and inspect build backends for source installs"
+    description: "Installing a pre-built wheel avoids setup.py execution entirely. For source installs, pyproject.toml changes the build interface but does not remove arbitrary code execution risk: pip still creates an isolated build environment and invokes the declared build backend and its hooks, which may execute attacker-controlled code or pull attacker-controlled build dependencies.<sup><a href=\"#hist-1\">[1]</a></sup>"
     commands:
       - code: |
           # Install only pre-built wheels, never source distributions
           pip install --only-binary :all: <package-name>
 
-          # Check whether a package is available as a wheel (safe) or only as sdist (setup.py will execute)
-          pip download --no-deps --only-binary :all: <package-name> 2>&1 || echo "No wheel available - sdist only (setup.py will execute)"
+          # Check whether a package is available as a wheel
+          pip download --no-deps --only-binary :all: <package-name> 2>&1 || echo "No wheel available - source build required"
+
+          # If a source build is required, inspect the declared build interface
+          pip download --no-deps --no-binary :all: <package-name> -d /tmp/inspect
+          cd /tmp/inspect
+          tar xzf *.tar.gz
+          cat */pyproject.toml 2>/dev/null || echo "No pyproject.toml; legacy setup.py path likely"
         language: "bash"
   - title: "Monitor network activity during pip install"
     description: "Use network monitoring tools to detect unexpected outbound connections during package installation, which may indicate data exfiltration or C2 communication."
@@ -166,7 +172,7 @@ detection:
         language: "bash"
 mitigation:
   - "Use --only-binary :all: flag with pip to install pre-built wheels and avoid executing setup.py"
-  - "Prefer packages that use PEP 517/518 build systems (pyproject.toml) over legacy setup.py"
+  - "Treat PEP 517/518 builds as a different execution path, not a safe one; review build backends and build dependencies before installing from source"
   - "Run pip install in isolated environments (containers, VMs, or sandboxed CI/CD runners)"
   - "Implement network egress filtering to block unexpected outbound connections during builds"
   - "Use pip's --require-hashes flag to verify package integrity against known-good hashes"
@@ -181,6 +187,15 @@ references:
     url: "https://checkmarx.com/blog/pypi-is-under-attack-project-creation-and-user-registration-suspended/"
   - title: "pip documentation - Installation"
     url: "https://pip.pypa.io/en/stable/cli/pip_install/"
+historicalNotes:
+  - date: "30 April, 2026"
+    note: >-
+      Updated the description and detection guidance to distinguish legacy
+      setup.py execution from modern PEP 517/518 source-build behavior, and
+      clarified that pyproject.toml does not by itself eliminate arbitrary
+      build-time code execution. Sources:
+      <a href="https://pip.pypa.io/en/stable/reference/build-system/setup-py/" target="_blank" rel="noopener">pip documentation — setup.py (legacy)</a>;
+      <a href="https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml.html" target="_blank" rel="noopener">pip documentation — pyproject.toml</a>.
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-04-30
 ---

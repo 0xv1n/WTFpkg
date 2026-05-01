@@ -10,7 +10,7 @@
       "category": {{ .Params.category | jsonify }},
       "severity": {{ .Params.severity | jsonify }},
       "platform": {{ .Params.platform | jsonify }},
-      "description": {{ .Params.description | truncate 150 | jsonify }},
+      "description": {{ .Params.description | plainify | truncate 150 | jsonify }},
       "url": {{ .RelPermalink | jsonify }}
     }
     {{- end }}

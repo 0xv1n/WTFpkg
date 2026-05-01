@@ -6,14 +6,14 @@ category: "Code Execution"
 severity: "high"
 platform:
   - "macOS"
-description: "The Cask DSL provides a `pkg` stanza (to install a macOS .pkg) and an `installer script:` stanza (to run an arbitrary executable). Both accept `sudo: true`, in which case `brew install --cask` prompts for the user's admin password and runs the payload as root. Because users are conditioned to type their password for application installers, a malicious cask — or a compromised cask update — can obtain root code execution with a single prompt that looks identical to a legitimate vendor installer."
+description: "The Cask DSL provides a `pkg` stanza (to install a macOS .pkg) and an `installer script:` stanza (to run an arbitrary executable). The `installer script:` artifact can explicitly request elevation with `sudo: true`; the `pkg` path can also lead to root code execution because macOS's Installer runs package scripts as root once the user authorizes installation. Because users are conditioned to type their password for application installers, a malicious cask — or a compromised cask update — can obtain privileged code execution through an install flow that looks routine. The `allow_untrusted: true` option on `pkg` relaxes installer certificate trust checks for the package; it is not a generic Gatekeeper bypass for arbitrary payloads.<sup><a href=\"#hist-1\">[1]</a></sup>"
 prerequisites:
   - "Victim has admin rights on the Mac and uses `brew install --cask`"
   - "Attacker controls a cask in a tap the victim has added (homebrew/cask or third-party)"
   - "Victim authorizes the macOS authentication prompt during install"
 attackScenarios:
   - title: "pkg Stanza Installing an Attacker-Signed Package as Root"
-    description: "The cask points `pkg` at a `.pkg` the attacker ships. macOS's `installer(8)` runs the payload's preinstall/postinstall scripts as root with full disk access (on recent macOS the user's admin password plus any TCC prompts the package triggers). `allow_untrusted: true` bypasses Gatekeeper's signature check if the attacker cannot obtain a Developer ID."
+    description: "The cask points `pkg` at a `.pkg` the attacker ships. macOS's `installer(8)` runs the payload's preinstall/postinstall scripts as root with full disk access once the user authorizes installation. `allow_untrusted: true` tells the installer to accept a package with an untrusted signing certificate, increasing risk when users install casks from third-party taps.<sup><a href=\"#hist-1\">[1]</a></sup>"
     commands:
       - label: "Malicious Cask using the pkg stanza"
         code: |
@@ -119,7 +119,7 @@ detection:
             grep -E "PackageKit|Scripts|install-"
         language: "bash"
 mitigation:
-  - "Run `brew cat --cask <name>` before install; reject any cask whose stanzas include `pkg`, `installer script:`, `sudo: true`, or `allow_untrusted`"
+  - "Run `brew cat --cask <name>` before install; reject or closely review any cask whose stanzas include `pkg` or `installer script:`, and treat `sudo: true` or `allow_untrusted` as elevated-risk signals<sup><a href=\"#hist-1\">[1]</a></sup>"
   - "Do not perform `brew install --cask` from an admin account; use a separate standard user and elevate deliberately"
   - "Require code-signed and notarized .pkg payloads — refuse `allow_untrusted: true` via policy"
   - "Monitor `/Library/LaunchDaemons` and `/Library/LaunchAgents` for plists created during brew operations"
@@ -132,6 +132,16 @@ references:
     url: "https://docs.brew.sh/Cask-Cookbook#stanza-installer"
   - title: "Apple installer(8) manual"
     url: "https://ss64.com/mac/installer.html"
+historicalNotes:
+  - date: "30 April, 2026"
+    note: >-
+      Corrected the distinction between pkg and installer script behavior,
+      clarified that sudo: true applies to installer script rather than pkg,
+      and revised the allow_untrusted explanation to reflect installer
+      certificate trust semantics rather than a broad Gatekeeper bypass.
+      Sources:
+      <a href="https://docs.brew.sh/Cask-Cookbook#stanza-pkg" target="_blank" rel="noopener">Homebrew Cask Cookbook — pkg stanza</a>;
+      <a href="https://docs.brew.sh/Cask-Cookbook#stanza-installer" target="_blank" rel="noopener">Homebrew Cask Cookbook — installer stanza</a>.
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-04-30
 ---

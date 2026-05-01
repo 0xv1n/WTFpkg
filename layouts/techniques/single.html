@@ -28,11 +28,12 @@
     {{ with .Params.detection }}<a href="#detection">Detection</a>{{ end }}
     {{ with .Params.mitigation }}<a href="#mitigation">Mitigation</a>{{ end }}
     {{ with .Params.references }}<a href="#references">References</a>{{ end }}
+    {{ with .Params.historicalNotes }}<a href="#historical-notes">History</a>{{ end }}
   </nav>
 
   <!-- Description -->
   <div class="technique-description">
-    {{ .Params.description }}
+    {{ .Params.description | safeHTML }}
   </div>
 
   <!-- Prerequisites -->
@@ -41,7 +42,7 @@
     <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Prerequisites</h2>
     <ul class="prereq-list">
       {{ range . }}
-      <li>{{ . }}</li>
+      <li>{{ . | safeHTML }}</li>
       {{ end }}
     </ul>
   </section>
@@ -54,7 +55,7 @@
     {{ range . }}
     <div class="scenario-card">
       <h3>{{ .title }}</h3>
-      <p>{{ .description }}</p>
+      <p>{{ .description | safeHTML }}</p>
       {{ range .commands }}
       <div class="code-block-wrapper">
         {{ with .label }}<div class="code-label">{{ . }}</div>{{ end }}
@@ -74,7 +75,7 @@
     {{ range . }}
     <div class="detection-card">
       <h3>{{ .title }}</h3>
-      <p>{{ .description }}</p>
+      <p>{{ .description | safeHTML }}</p>
       {{ range .commands }}
       <div class="code-block-wrapper">
         <button class="copy-btn" aria-label="Copy code to clipboard">Copy</button>
@@ -92,7 +93,7 @@
     <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Mitigation</h2>
     <ul class="mitigation-list">
       {{ range . }}
-      <li>{{ . }}</li>
+      <li>{{ . | safeHTML }}</li>
       {{ end }}
     </ul>
   </section>
@@ -111,6 +112,19 @@
       </li>
       {{ end }}
     </ul>
+  </section>
+  {{ end }}
+
+  {{ with .Params.historicalNotes }}
+  <section class="detail-section historical-notes" id="historical-notes">
+    <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Historical Notes</h2>
+    <ol class="historical-notes-list">
+      {{ range $i, $note := . }}
+      <li id="hist-{{ add $i 1 }}">
+        <strong>{{ $note.date }}</strong>: {{ $note.note | safeHTML }}
+      </li>
+      {{ end }}
+    </ol>
   </section>
   {{ end }}
 
