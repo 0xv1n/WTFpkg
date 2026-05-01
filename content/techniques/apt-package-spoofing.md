@@ -6,7 +6,7 @@ category: "Supply Chain"
 severity: "high"
 platform:
   - "Linux"
-description: "APT uses a version comparison algorithm to determine which package version to install, preferring the highest available version across all configured repositories. An attacker who controls a repository can create packages with the same name as legitimate ones but with artificially inflated version numbers, including the use of epoch values, to override legitimate upstream packages. When the victim runs apt-get upgrade or installs the package, APT selects the attacker's higher-versioned package, replacing the legitimate software with a trojanized version."
+description: "APT selects package candidates based on repository priority first and version number second. If an attacker controls a repository that is trusted and allowed to compete with official sources, they can create packages with the same name as legitimate ones but with artificially inflated version numbers, including the use of epoch values, to outrank same-priority upstream candidates. When the victim runs apt-get upgrade or installs the package, APT may select the attacker's higher-versioned package if repository priorities, pinning, and target-release settings allow it, replacing the legitimate software with a trojanized version.<sup><a href=\"#hist-1\">[1]</a></sup>"
 prerequisites:
   - "An attacker-controlled APT repository already configured on the target system (see apt-malicious-repo-source)"
   - "Knowledge of the target package name and its current version in official repositories"
@@ -99,7 +99,7 @@ detection:
         language: "bash"
 mitigation:
   - "Use APT pinning (apt_preferences) to prioritize official repositories and assign lower priority to third-party sources"
-  - "Configure pin-priority in /etc/apt/preferences.d/ to ensure official repos always take precedence (e.g., Pin-Priority: 1001 for official sources)"
+  - "Configure pin-priority in /etc/apt/preferences.d/ so official repositories rank above third-party sources without forcing unintended downgrades; avoid priorities above 1000 unless you explicitly want downgrades<sup><a href=\"#hist-1\">[1]</a></sup>"
   - "Regularly audit installed package sources using apt-cache policy for critical system packages"
   - "Remove or disable unnecessary third-party repositories that could serve spoofed packages"
   - "Implement version-locking for critical packages using apt-mark hold or dpkg --set-selections"
@@ -111,6 +111,13 @@ references:
     url: "https://manpages.debian.org/bookworm/apt/apt_preferences.5.en.html"
   - title: "Debian Wiki - AptConfiguration"
     url: "https://wiki.debian.org/AptConfiguration"
+historicalNotes:
+  - date: "30 April, 2026"
+    note: >-
+      Corrected the overview to reflect APT's priority-first, version-second
+      candidate selection and revised the pinning guidance to avoid implying
+      that Pin-Priority values above 1000 are a routine best practice. Source:
+      <a href="https://manpages.debian.org/apt_preferences" target="_blank" rel="noopener">apt_preferences(5)</a>.
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-04-30
 ---

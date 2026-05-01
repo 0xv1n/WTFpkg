@@ -8,7 +8,7 @@ platform:
   - "Linux"
   - "macOS"
   - "Windows"
-description: "npm supports lifecycle scripts such as preinstall, postinstall, and preuninstall that execute arbitrary shell commands during package installation. Attackers embed malicious commands in these scripts to exfiltrate environment variables, download and execute malware, or establish persistent backdoors. Because these scripts run automatically with no user interaction beyond `npm install`, they represent one of the most abused vectors in the npm ecosystem."
+description: "npm supports lifecycle scripts such as preinstall, install, postinstall, and in some workflows prepare, all of which can execute arbitrary shell commands during package installation or related packaging steps. Attackers embed malicious commands in these scripts to exfiltrate environment variables, download and execute malware, or establish persistent backdoors. Because these scripts can run automatically with no user interaction beyond `npm install`, they represent one of the most abused vectors in the npm ecosystem. Current npm CLIs do not implement uninstall lifecycle scripts.<sup><a href=\"#hist-1\">[1]</a></sup>"
 prerequisites:
   - "Ability to publish a package to the npm registry or compromise an existing one"
   - "Target must install the malicious package via npm install"
@@ -88,6 +88,13 @@ references:
     url: "https://github.com/apps/socket-security"
   - title: "npm Lifecycle Scripts Documentation"
     url: "https://docs.npmjs.com/cli/v10/using-npm/scripts"
+historicalNotes:
+  - date: "30 April, 2026"
+    note: >-
+      Updated the overview to remove the outdated preuninstall example and
+      align the page with current npm behavior, where uninstall lifecycle
+      scripts are not implemented in modern npm versions. Source:
+      <a href="https://docs.npmjs.com/cli/v11/using-npm/scripts/" target="_blank" rel="noopener">npm Docs — Scripts (v11)</a>.
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-04-30
 ---

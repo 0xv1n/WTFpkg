@@ -178,7 +178,7 @@ mitigation:
   - "Install packages using --only-binary :all: to skip setup.py execution entirely"
   - "Audit cmdclass definitions in setup.py before installing any package from source"
   - "Use pip install --no-build-isolation cautiously; prefer isolated build environments"
-  - "Migrate to PEP 517/518 builds with pyproject.toml which have more constrained build backends"
+  - "Treat PEP 517/518 builds as a different interface, not a trust boundary; arbitrary code can still run in build backends and build dependencies during source builds<sup><a href=\"#hist-1\">[1]</a></sup>"
   - "Implement code review policies for all new dependencies, focusing on setup.py and build scripts"
   - "Run package installations in containers or VMs with limited network access and filesystem permissions"
   - "Use tools like pip-audit to check for known vulnerabilities in dependencies"
@@ -191,6 +191,13 @@ references:
     url: "https://www.techtarget.com/searchsecurity/news/366577455/Typosquatting-campaign-malicious-packages-slam-PyPi"
   - title: "PEP 517 - A build-system independent format for source trees"
     url: "https://peps.python.org/pep-0517/"
+historicalNotes:
+  - date: "30 April, 2026"
+    note: >-
+      Revised the mitigation guidance to clarify that moving from setup.py to
+      pyproject.toml changes the build interface but does not by itself remove
+      arbitrary build-time code execution risk. Source:
+      <a href="https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml.html" target="_blank" rel="noopener">pip documentation — pyproject.toml</a>.
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-04-30
 ---

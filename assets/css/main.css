@@ -712,6 +712,23 @@ main { flex: 1; }
   margin-bottom: 2rem;
 }
 
+.technique-description sup,
+.prereq-list sup,
+.mitigation-list sup,
+.scenario-card sup,
+.detection-card sup {
+  font-size: 0.75em;
+  vertical-align: super;
+}
+
+.technique-description sup a,
+.prereq-list sup a,
+.mitigation-list sup a,
+.scenario-card sup a,
+.detection-card sup a {
+  color: var(--text-link);
+}
+
 /* Sticky section nav for detail pages */
 .section-nav {
   position: sticky;
@@ -960,6 +977,27 @@ main { flex: 1; }
 .ref-icon {
   font-size: 0.6875rem;
   color: var(--text-2);
+}
+
+.historical-notes-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--text-1);
+}
+
+.historical-notes-list li {
+  margin-bottom: 0.625rem;
+  line-height: 1.6;
+}
+
+.historical-notes-list li:last-child {
+  margin-bottom: 0;
+}
+
+.historical-notes-list strong {
+  color: var(--text-0);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
 }
 
 /* --- Footer --- */

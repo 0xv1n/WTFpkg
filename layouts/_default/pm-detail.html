@@ -49,13 +49,13 @@
 <!-- Technique cards -->
 <div class="technique-grid" id="technique-grid">
   {{ range $techniques }}
-  <a href="{{ .RelPermalink }}" class="technique-card technique-card-{{ $pmKey }}" data-name="{{ .Params.name }}" data-description="{{ .Params.description }}" data-category="{{ .Params.category }}" data-severity="{{ .Params.severity }}">
+  <a href="{{ .RelPermalink }}" class="technique-card technique-card-{{ $pmKey }}" data-name="{{ .Params.name }}" data-description="{{ .Params.description | plainify }}" data-category="{{ .Params.category }}" data-severity="{{ .Params.severity }}">
     <div class="card-top">
       <span class="severity-pill severity-{{ .Params.severity }}">{{ .Params.severity }}</span>
       <span class="card-category">{{ .Params.category }}</span>
     </div>
     <h3 class="card-title">{{ .Params.name }}</h3>
-    <p class="card-desc">{{ .Params.description | truncate 140 }}</p>
+    <p class="card-desc">{{ .Params.description | plainify | truncate 140 }}</p>
     <div class="card-bottom">
       {{ range .Params.platform }}
       <span class="platform-tag">{{ . }}</span>
