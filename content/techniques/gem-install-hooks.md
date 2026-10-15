@@ -9,13 +9,16 @@ platform:
   - "macOS"
   - "Windows"
 description: "RubyGems supports pre_install and post_install hooks that execute Ruby code during any gem installation. These hooks can be registered via the RubyGems plugin system by placing a `rubygems_plugin.rb` file in a gem's `lib/` directory, which RubyGems auto-loads. An attacker who publishes a gem containing a malicious RubyGems plugin can execute arbitrary code every time the victim installs any gem, turning the package manager itself into a persistent backdoor."
+descriptionCitations: [1, 2]
 prerequisites:
-  - "Write access to the victim's ~/.gemrc or RubyGems plugin directory"
+  - "Ability to get a plugin-bearing gem installed or to write a rubygems_plugin.rb file into an installed gem's require path"
   - "Alternatively, the ability to publish a gem that registers itself as a RubyGems plugin"
   - "The victim must subsequently run gem install for any package"
+prerequisitesCitations: [1, 2]
 attackScenarios:
   - title: "Malicious RubyGems Plugin with post_install Hook"
     description: "An attacker creates a gem that registers itself as a RubyGems plugin. Once installed, the plugin's post_install hook executes arbitrary Ruby code every time the victim installs any subsequent gem. This provides persistent code execution that survives across multiple gem operations."
+    citations: [1, 2]
     commands:
       - label: "Create a malicious RubyGems plugin gem"
         code: |
@@ -54,6 +57,7 @@ attackScenarios:
         language: "bash"
   - title: "Malicious rubygems_plugin.rb Auto-Loaded by RubyGems"
     description: "An attacker publishes a gem containing a `lib/rubygems_plugin.rb` file. RubyGems automatically loads any file named `rubygems_plugin.rb` found in an installed gem's `lib/` directory. The plugin registers a `Gem.post_install` hook that executes arbitrary code every time the victim installs any subsequent gem. Unlike `.gemrc` (which is a YAML configuration file and does not support inline Ruby code), this is a legitimate RubyGems extension mechanism that can be abused."
+    citations: [1, 2]
     commands:
       - label: "Malicious rubygems_plugin.rb that registers a persistent hook"
         code: |
@@ -80,24 +84,27 @@ attackScenarios:
 detection:
   - title: "List installed RubyGems plugins"
     description: "Search for installed gems that contain a rubygems_plugin.rb file, which is automatically loaded by RubyGems."
+    citations: [1, 2]
     commands:
-      - code: "find $(gem environment gemdir)/gems -name 'rubygems_plugin.rb' -exec echo '=== {} ===' \\; -exec cat {} \\;"
+      - code: "ruby -e \"puts Gem.find_files('rubygems_plugin.rb')\""
         language: "bash"
-  - title: "Check gem environment for hook paths"
-    description: "Review the full gem environment configuration for unexpected settings."
+  - title: "Review every configured gem path"
+    description: "Review the RubyGems search paths for unexpected installation roots where a plugin could be loaded."
+    citations: [1, 2]
     commands:
-      - code: "gem environment"
+      - code: "gem environment gempath"
         language: "bash"
 mitigation:
   - "Regularly audit installed gems for rubygems_plugin.rb files using find or gem contents"
   - "Review any rubygems_plugin.rb files for suspicious hook registrations"
   - "Monitor file modification events on the gem plugin directories"
   - "Use containerized environments for gem installation to limit persistence"
+mitigationCitations: [1, 2]
 references:
   - title: "RubyGems Plugins Guide"
     url: "https://guides.rubygems.org/plugins/"
   - title: "RubyGems API - Gem.post_install"
     url: "https://docs.ruby-lang.org/en/master/Gem.html"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

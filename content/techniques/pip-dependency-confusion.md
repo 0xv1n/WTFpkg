@@ -8,15 +8,18 @@ platform:
   - "Linux"
   - "macOS"
   - "Windows"
-description: "Dependency confusion exploits pip's default package resolution behavior, where it searches the public PyPI index alongside or before private/internal package indexes. An attacker identifies the names of internal packages used by a target organization and publishes identically-named packages on PyPI with higher version numbers. When pip resolves dependencies, it selects the higher-versioned public package over the legitimate internal one, causing the attacker's malicious code to be installed. This attack was famously demonstrated by Alex Birsan in 2021, successfully compromising builds at Apple, Microsoft, and other major companies."
+description: "Dependency confusion can arise when pip is configured to search both public PyPI and a private index. pip assigns no priority to those locations; it combines candidates and selects the best match for the requirement. An attacker who learns an internal distribution name can publish a public project with a version that the resolver prefers, subject to version constraints, compatibility, and other candidate-selection rules. Alex Birsan publicly demonstrated this attack pattern in 2021 against multiple companies."
+descriptionCitations: [1, 2, 3, 4, 5, 6, 7]
 prerequisites:
   - "Target organization uses internal/private Python packages with discoverable names"
   - "pip is configured with --extra-index-url pointing to a private registry (rather than --index-url which replaces PyPI)"
   - "Internal package names are not registered (reserved) on public PyPI"
   - "No version pinning with hash verification is in place"
+prerequisitesCitations: [1, 2, 3, 4, 5, 6, 7]
 attackScenarios:
   - title: "Exploiting --extra-index-url with higher version numbers"
-    description: "When an organization's pip configuration uses --extra-index-url to add a private registry, pip searches both PyPI and the private index, selecting the highest version found across all indexes. The attacker registers the internal package name on PyPI with a much higher version number to guarantee it is selected."
+    description: "When pip uses --extra-index-url, it checks both the primary and extra indexes without assigning either location priority. A public package with a higher compatible version can become the preferred candidate when it satisfies the complete requirement set; a high version alone does not override pins, compatibility rules, or hashes."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - label: "Reconnaissance: discover internal package names from leaked requirements or error messages"
         code: |
@@ -85,6 +88,7 @@ attackScenarios:
         language: "bash"
   - title: "Exploiting requirements.txt without pinned versions"
     description: "Organizations that list internal dependencies in requirements.txt without pinning to exact versions or specifying the index URL are vulnerable. The default pip behavior checks PyPI first or alongside private indexes."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - label: "Vulnerable requirements.txt"
         code: |
@@ -113,6 +117,7 @@ attackScenarios:
 detection:
   - title: "Audit pip configuration for index URL settings"
     description: "Check all pip configuration files and environment variables for --extra-index-url usage, which searches multiple indexes and is the primary enabler of dependency confusion attacks. The safer alternative is --index-url which replaces PyPI entirely."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - code: |
           # Check pip configuration
@@ -129,13 +134,15 @@ detection:
         language: "bash"
   - title: "Verify package source index during installation"
     description: "Use pip's verbose mode to confirm which index a package is being downloaded from, and check for unexpected public PyPI downloads of internal packages."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - code: |
           # Install with verbose output to see which index is used
-          pip install -v <package-name> 2>&1 | grep -i "found\|downloading\|index"
+          PACKAGE=acme-auth
+          pip install -v "$PACKAGE" 2>&1 | grep -i "found\|downloading\|index"
 
           # Check installed package metadata for source
-          pip show <package-name> | grep -i "location\|home-page"
+          pip show "$PACKAGE" | grep -i "location\|home-page"
 
           # List all packages and check for unexpected versions
           pip list --format=json | python3 -c "
@@ -148,20 +155,26 @@ detection:
 mitigation:
   - "Use --index-url instead of --extra-index-url to point to the private registry exclusively, and configure the private registry to proxy/mirror public PyPI packages"
   - "Pin all dependencies to exact versions with --require-hashes to prevent version substitution"
-  - "Register (reserve) all internal package names on public PyPI as empty placeholder packages"
   - "Use pip's --no-deps flag combined with a fully resolved lockfile to prevent transitive dependency confusion"
   - "Configure private package indexes to have priority over PyPI, or use tools like devpi that support index inheritance with priority control"
   - "Implement CI/CD controls that verify package provenance and source index before installation"
-  - "Use namespace packages (e.g., acme.auth instead of acme-auth) which are harder to squat on PyPI"
+  - "Choose distinctive internal distribution names and verify they are not registered on public indexes; punctuation alone provides no separation because Python normalizes dots, hyphens, and underscores equivalently"
+mitigationCitations: [1, 2, 3, 4, 5, 6, 7]
 references:
   - title: "Dependency Confusion: How I Hacked Into Apple, Microsoft and Dozens of Other Companies - Alex Birsan"
     url: "https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610"
-  - title: "Microsoft - 3 Ways to Mitigate Risk When Using Private Package Feeds"
-    url: "https://azure.microsoft.com/en-us/resources/3-ways-to-mitigate-risk-using-private-package-feeds/"
+  - title: "Microsoft Learn - Azure Artifacts Upstream Sources"
+    url: "https://learn.microsoft.com/en-us/azure/devops/artifacts/concepts/upstream-sources"
   - title: "pip documentation - Configuration"
     url: "https://pip.pypa.io/en/stable/topics/configuration/"
   - title: "PyPI - Namespace packages"
     url: "https://packaging.python.org/en/latest/guides/packaging-namespace-packages/"
+  - title: "PEP 503 - Normalized Names"
+    url: "https://peps.python.org/pep-0503/#normalized-names"
+  - title: "pip install - Package Index Options"
+    url: "https://pip.pypa.io/en/stable/cli/pip_install/#package-index-options"
+  - title: "PEP 541 - Package Index Name Retention"
+    url: "https://peps.python.org/pep-0541/"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

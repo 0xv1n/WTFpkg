@@ -6,14 +6,17 @@ category: "Supply Chain"
 severity: "high"
 platform:
   - "Linux"
-description: "APT selects package candidates based on repository priority first and version number second. If an attacker controls a repository that is trusted and allowed to compete with official sources, they can create packages with the same name as legitimate ones but with artificially inflated version numbers, including the use of epoch values, to outrank same-priority upstream candidates. When the victim runs apt-get upgrade or installs the package, APT may select the attacker's higher-versioned package if repository priorities, pinning, and target-release settings allow it, replacing the legitimate software with a trojanized version.<sup><a href=\"#hist-1\">[1]</a></sup>"
+description: "APT selects package candidates based on repository priority first and version number second. If an attacker controls a repository that is trusted and allowed to compete with official sources, they can create packages with the same name as legitimate ones but with artificially inflated version numbers, including the use of epoch values, to outrank same-priority upstream candidates. When the victim runs apt-get upgrade or installs the package, APT may select the attacker's higher-versioned package if repository priorities, pinning, and target-release settings allow it, replacing the legitimate software with a trojanized version."
+descriptionCitations: [1, 2, 3]
 prerequisites:
   - "An attacker-controlled APT repository already configured on the target system (see apt-malicious-repo-source)"
   - "Knowledge of the target package name and its current version in official repositories"
   - "Ability to host packages with valid Debian package structure (control file, data archive)"
+prerequisitesCitations: [1, 2, 3]
 attackScenarios:
   - title: "Version Override via Epoch Manipulation"
-    description: "The Debian versioning scheme supports an epoch prefix (e.g., 2:1.0.0) that takes the highest priority in version comparison. An attacker sets an epoch value higher than the legitimate package's epoch (most packages have no epoch, defaulting to 0), guaranteeing their malicious package is selected regardless of the downstream version string."
+    description: "The Debian versioning scheme compares the epoch before the upstream version and Debian revision. At the same APT pin priority, a candidate with a higher epoch outranks a legitimate candidate regardless of the remaining version string. Repository priorities, target-release settings, holds, and dependency constraints can still prevent that candidate from being selected or installed."
+    citations: [1, 2, 3]
     commands:
       - label: "Check the current version and epoch of the target package"
         code: |
@@ -29,7 +32,7 @@ attackScenarios:
           Section: net
           Priority: optional
           Architecture: amd64
-          Depends: openssh-client (= 99:8.9p1-3ubuntu0.6)
+          Depends: openssh-client
           Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
           Description: Secure shell (SSH) server
            Trojanized openssh-server with backdoor access
@@ -56,6 +59,7 @@ attackScenarios:
         language: "bash"
   - title: "Upgrade Hijack via Version String Manipulation"
     description: "Without using epochs, an attacker can manipulate the upstream version and Debian revision portions of the version string to achieve a higher version comparison result. APT compares version strings lexicographically with special rules for tildes and numeric segments."
+    citations: [1, 2, 3]
     commands:
       - label: "Craft a version string that compares higher"
         code: |
@@ -77,6 +81,7 @@ attackScenarios:
 detection:
   - title: "Compare package sources with apt-cache policy"
     description: "Use apt-cache policy to identify which repository is providing each installed package. If a critical package is being sourced from an unexpected repository or has an unusually high epoch/version, it may have been spoofed."
+    citations: [1, 2, 3]
     commands:
       - code: |
           # Check the source and version priority for critical packages
@@ -89,7 +94,8 @@ detection:
           done
         language: "bash"
   - title: "Detect packages with unusually high epochs"
-    description: "Packages with epoch values significantly higher than expected are a strong indicator of version spoofing. Most legitimate packages use epoch 0 or 1."
+    description: "An epoch that differs unexpectedly from the version offered by the intended distribution repository is a useful signal for review. Compare the installed version and candidate sources rather than relying on a universal epoch threshold."
+    citations: [1, 2, 3]
     commands:
       - code: |
           # Find installed packages with high epoch values
@@ -99,11 +105,12 @@ detection:
         language: "bash"
 mitigation:
   - "Use APT pinning (apt_preferences) to prioritize official repositories and assign lower priority to third-party sources"
-  - "Configure pin-priority in /etc/apt/preferences.d/ so official repositories rank above third-party sources without forcing unintended downgrades; avoid priorities above 1000 unless you explicitly want downgrades<sup><a href=\"#hist-1\">[1]</a></sup>"
+  - "Configure pin-priority in /etc/apt/preferences.d/ so official repositories rank above third-party sources without forcing unintended downgrades; avoid priorities above 1000 unless you explicitly want downgrades"
   - "Regularly audit installed package sources using apt-cache policy for critical system packages"
   - "Remove or disable unnecessary third-party repositories that could serve spoofed packages"
   - "Implement version-locking for critical packages using apt-mark hold or dpkg --set-selections"
   - "Use Debian snapshot archives or a curated local mirror to control available package versions"
+mitigationCitations: [1, 2, 3]
 references:
   - title: "Debian Policy Manual - Version Numbering"
     url: "https://www.debian.org/doc/debian-policy/ch-controlfields.html#version"
@@ -119,5 +126,5 @@ historicalNotes:
       that Pin-Priority values above 1000 are a routine best practice. Source:
       <a href="https://manpages.debian.org/apt_preferences" target="_blank" rel="noopener">apt_preferences(5)</a>.
 created: 2026-04-02
-updated: 2026-04-30
+updated: 2026-10-14
 ---

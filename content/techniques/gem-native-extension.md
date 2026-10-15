@@ -9,13 +9,16 @@ platform:
   - "macOS"
   - "Windows"
 description: "RubyGems packages with native C extensions require an extconf.rb file that is executed as arbitrary Ruby code during `gem install`. Because extconf.rb runs with the full privileges of the installing user and has unrestricted access to the filesystem, network, and system commands, a malicious gem author can embed arbitrary code that executes the moment a victim installs the gem. This is one of the most dangerous vectors in the RubyGems ecosystem because extconf.rb execution is expected behavior for native extensions and raises no warnings."
+descriptionCitations: [1, 2]
 prerequisites:
   - "Ability to publish a gem to rubygems.org or deliver a .gem file to the target"
   - "The victim must install the gem using gem install or bundle install"
   - "The malicious gem must declare native extensions in its gemspec via the extensions field"
+prerequisitesCitations: [1, 2]
 attackScenarios:
   - title: "Malicious extconf.rb with System Command Execution"
     description: "An attacker publishes a gem that declares a native extension. The extconf.rb file, which is automatically executed during gem install, contains Ruby code that runs operating system commands using system(), backticks, or Kernel.exec. This can be used to exfiltrate environment variables, download and execute a second-stage payload, or establish persistence on the target system."
+    citations: [1, 2]
     commands:
       - label: "Create a malicious extconf.rb"
         code: |
@@ -55,11 +58,13 @@ attackScenarios:
 detection:
   - title: "Inspect gemspec for extensions field"
     description: "Check whether a gem declares native extensions before installing. Any gem with an extensions field will execute code during installation."
+    citations: [1, 2]
     commands:
       - code: "gem specification fast-parser extensions"
         language: "bash"
   - title: "Review extconf.rb before installing"
     description: "Download and unpack the gem without installing to review the extconf.rb contents for suspicious calls like system(), backticks, Net::HTTP, or Kernel.exec."
+    citations: [1, 2]
     commands:
       - code: |
           gem fetch fast-parser
@@ -68,20 +73,22 @@ detection:
         language: "bash"
   - title: "Monitor system calls during gem install"
     description: "Use strace or dtruss to monitor what system calls are made during gem installation to detect unexpected network connections or file writes."
+    citations: [1, 2]
     commands:
       - code: "strace -f -e trace=network,write gem install fast-parser 2>&1 | grep -E 'connect|open'"
         language: "bash"
 mitigation:
   - "Review extconf.rb files in gems before installing, especially for gems with native extensions"
-  - "Use gem install --ignore-dependencies and manually audit each dependency"
+  - "Audit the target and each dependency independently before installation; --ignore-dependencies does not make the target gem safe"
   - "Run gem installations in isolated containers or VMs to limit blast radius"
   - "Use bundle install --deployment with a lockfile to ensure reproducible builds"
   - "Monitor outbound network connections during gem installation"
+mitigationCitations: [1, 2]
 references:
   - title: "RubyGems Guides - Gems with Extensions"
     url: "https://guides.rubygems.org/gems-with-extensions/"
   - title: "RubyGems Security Best Practices"
     url: "https://guides.rubygems.org/security/"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

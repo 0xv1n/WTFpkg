@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ if not .IsHome }}{{ .Title }} | {{ end }}{{ .Site.Title }}</title>
+  <title>{{ if not .IsHome }}{{ with .Params.name }}{{ . }}{{ else }}{{ $.Title }}{{ end }} | {{ end }}{{ .Site.Title }}</title>
   <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
   <link rel="icon" href="{{ "favicon.svg" | absURL }}" type="image/svg+xml">
 

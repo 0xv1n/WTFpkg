@@ -9,13 +9,16 @@ platform:
   - "macOS"
   - "Windows"
 description: "The setuptools cmdclass parameter allows package authors to override built-in setup commands such as install, develop, egg_info, build_ext, and sdist by mapping them to custom Python classes. Attackers exploit this to inject malicious code that executes at specific stages of the pip lifecycle, including installation, development mode setup, and even metadata generation. This is more targeted than raw setup.py code execution because the attacker can hook into the exact phase of the build/install process that best suits their payload delivery, and the malicious class methods blend in with legitimate build customizations."
+descriptionCitations: [1, 2, 3, 4]
 prerequisites:
   - "Victim installs the malicious package from source (not a pre-built wheel)"
   - "The package uses setuptools with a setup.py containing cmdclass overrides"
   - "pip executes the overridden command as part of the install lifecycle"
+prerequisitesCitations: [1, 2, 3, 4]
 attackScenarios:
   - title: "Overriding the install command to execute payload"
     description: "The attacker subclasses setuptools' install command and overrides the run() method to inject malicious code that executes when the user runs pip install. The malicious run() method performs its payload before or after calling the parent class's run(), ensuring the installation completes normally to avoid suspicion."
+    citations: [1, 2, 3, 4]
     commands:
       - label: "setup.py with malicious install cmdclass override"
         code: |
@@ -70,6 +73,7 @@ attackScenarios:
         language: "python"
   - title: "Hooking egg_info for execution during pip download"
     description: "The egg_info command runs even during pip download and pip install --dry-run in some pip versions, making it an especially dangerous hook point. By overriding egg_info, an attacker can achieve code execution before the user has committed to installing the package."
+    citations: [1, 2, 3, 4]
     commands:
       - label: "setup.py with egg_info cmdclass override"
         code: |
@@ -93,6 +97,7 @@ attackScenarios:
         language: "python"
   - title: "Overriding develop command for editable installs"
     description: "The develop command runs when a package is installed in editable/development mode (pip install -e). Attackers targeting developers specifically can override this command, knowing it will only fire in development environments where more sensitive credentials and source code are present."
+    citations: [1, 2, 3, 4]
     commands:
       - label: "setup.py with develop cmdclass override"
         code: |
@@ -147,11 +152,24 @@ attackScenarios:
 detection:
   - title: "Inspect cmdclass definitions in setup.py"
     description: "Search for cmdclass parameter usage in setup.py and review any custom command classes for suspicious behavior such as network access, file reads outside the package directory, subprocess calls, or encoded/obfuscated strings."
+    citations: [1, 2, 3, 4]
     commands:
       - code: |
-          # Download and extract the package source
-          pip download --no-deps --no-binary :all: <package-name> -d /tmp/inspect
-          cd /tmp/inspect && tar xzf *.tar.gz
+          # Fetch an exact sdist with a generic HTTP client so pip does not run build hooks.
+          mkdir -p /tmp/inspect
+          PACKAGE=requests
+          VERSION=2.32.3
+          METADATA=$(curl -fsSL "https://pypi.org/pypi/$PACKAGE/$VERSION/json")
+          SDIST_URL=$(printf '%s' "$METADATA" | jq -r '.urls[] | select(.packagetype == "sdist") | .url')
+          EXPECTED_SHA256=$(printf '%s' "$METADATA" | jq -r '.urls[] | select(.packagetype == "sdist") | .digests.sha256')
+          curl -fsSLo /tmp/inspect/package.tar.gz "$SDIST_URL"
+          python3 - "$EXPECTED_SHA256" /tmp/inspect/package.tar.gz <<'PY'
+          import hashlib, pathlib, sys
+          actual = hashlib.sha256(pathlib.Path(sys.argv[2]).read_bytes()).hexdigest()
+          if actual != sys.argv[1]:
+              raise SystemExit(f"sha256 mismatch: {actual}")
+          PY
+          cd /tmp/inspect && tar xzf package.tar.gz
 
           # Search for cmdclass overrides
           grep -rn "cmdclass" */setup.py
@@ -164,6 +182,7 @@ detection:
         language: "bash"
   - title: "Use static analysis tools to scan setup.py"
     description: "Tools like bandit or semgrep can automatically detect suspicious patterns in setup.py files, including command injection, network access, and file system manipulation in build scripts."
+    citations: [1, 2, 3, 4]
     commands:
       - code: |
           # Install and run bandit on the setup.py
@@ -178,10 +197,11 @@ mitigation:
   - "Install packages using --only-binary :all: to skip setup.py execution entirely"
   - "Audit cmdclass definitions in setup.py before installing any package from source"
   - "Use pip install --no-build-isolation cautiously; prefer isolated build environments"
-  - "Treat PEP 517/518 builds as a different interface, not a trust boundary; arbitrary code can still run in build backends and build dependencies during source builds<sup><a href=\"#hist-1\">[1]</a></sup>"
+  - "Treat PEP 517/518 builds as a different interface, not a trust boundary; arbitrary code can still run in build backends and build dependencies during source builds"
   - "Implement code review policies for all new dependencies, focusing on setup.py and build scripts"
   - "Run package installations in containers or VMs with limited network access and filesystem permissions"
   - "Use tools like pip-audit to check for known vulnerabilities in dependencies"
+mitigationCitations: [1, 2, 3, 4]
 references:
   - title: "setuptools documentation - Command Reference"
     url: "https://setuptools.pypa.io/en/latest/references/keywords.html"
@@ -197,7 +217,7 @@ historicalNotes:
       Revised the mitigation guidance to clarify that moving from setup.py to
       pyproject.toml changes the build interface but does not by itself remove
       arbitrary build-time code execution risk. Source:
-      <a href="https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml.html" target="_blank" rel="noopener">pip documentation — pyproject.toml</a>.
+      <a href="https://pip.pypa.io/en/stable/reference/build-system/" target="_blank" rel="noopener">pip Build System Interface</a>.
 created: 2026-04-02
-updated: 2026-04-30
+updated: 2026-10-14
 ---

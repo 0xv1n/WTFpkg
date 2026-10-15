@@ -7,13 +7,16 @@ severity: "critical"
 platform:
   - "Linux"
 description: "Debian packages support maintainer scripts (preinst, postinst, prerm, postrm) that are automatically executed with root privileges during package installation, upgrade, or removal. An attacker who can craft or modify a .deb package can embed arbitrary shell commands in these scripts, achieving immediate root-level code execution the moment a victim installs the package via dpkg or apt. This is one of the most direct code execution vectors in the Debian packaging ecosystem because the scripts run non-interactively and with no sandboxing or confinement by default."
+descriptionCitations: [1, 2, 3]
 prerequisites:
   - "Ability to deliver a crafted .deb package to the target (via malicious repository, social engineering, or local access)"
   - "The victim must install the package using dpkg -i or apt install, which requires root or sudo privileges"
   - "Basic knowledge of Debian package structure and dpkg-deb tooling"
+prerequisitesCitations: [1, 2, 3]
 attackScenarios:
   - title: "Malicious .deb Package with Reverse Shell postinst"
     description: "An attacker creates a minimal Debian package containing a postinst script that establishes a reverse shell back to attacker-controlled infrastructure. When a victim installs this package, the postinst script executes as root immediately after the package files are unpacked, granting the attacker a root shell on the target system."
+    citations: [1, 2, 3]
     commands:
       - label: "Create the package directory structure"
         code: |
@@ -54,6 +57,7 @@ attackScenarios:
         language: "bash"
   - title: "Backdoor via preinst Script with Stealth"
     description: "An attacker uses the preinst script to execute code before the package is even unpacked. This can be used to disable security tooling, modify system configurations, or install backdoors that persist even if the package installation fails or is rolled back."
+    citations: [1, 2, 3]
     commands:
       - label: "Create a preinst that disables auditd before install"
         code: |
@@ -71,6 +75,7 @@ attackScenarios:
 detection:
   - title: "Inspect maintainer scripts of installed packages"
     description: "All maintainer scripts for installed packages are stored in /var/lib/dpkg/info/. Defenders should regularly audit these scripts for suspicious commands such as reverse shells, curl/wget downloads, cron modifications, or SSH key additions."
+    citations: [1, 2, 3]
     commands:
       - code: |
           # List all postinst scripts and search for suspicious patterns
@@ -79,6 +84,7 @@ detection:
         language: "bash"
   - title: "Monitor dpkg process execution in real-time"
     description: "Use auditd or process monitoring to detect child processes spawned by dpkg during package installation. Legitimate postinst scripts typically run package-specific configuration tools, not network utilities or shell redirections."
+    citations: [1, 2, 3]
     commands:
       - code: |
           # Audit rule to monitor processes spawned by dpkg
@@ -90,6 +96,7 @@ detection:
         language: "bash"
   - title: "Inspect a .deb before installing"
     description: "Before installing any third-party .deb file, extract and review its maintainer scripts to identify potentially malicious behavior."
+    citations: [1, 2, 3]
     commands:
       - code: |
           # Extract and review maintainer scripts without installing
@@ -106,6 +113,7 @@ mitigation:
   - "Implement mandatory access control (AppArmor, SELinux) to confine dpkg and apt processes"
   - "Deploy file integrity monitoring (AIDE, OSSEC) on /var/lib/dpkg/info/ to detect unexpected script modifications"
   - "Use dpkg --dry-run or apt-get -s (simulate) to preview package actions before actual installation"
+mitigationCitations: [1, 2, 3]
 references:
   - title: "Debian Policy Manual - Maintainer Scripts"
     url: "https://www.debian.org/doc/debian-policy/ch-maintainerscripts.html"
@@ -114,5 +122,5 @@ references:
   - title: "Debian Wiki - Packaging Tutorial"
     url: "https://wiki.debian.org/Packaging/Intro"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

@@ -9,13 +9,16 @@ platform:
   - "macOS"
   - "Windows"
 description: "The gemspec `extensions` field can reference Rakefiles in addition to extconf.rb files. When a gem with Rakefile-based extensions is installed, RubyGems invokes Rake to execute the specified build tasks, which can contain arbitrary Ruby code including system commands, file operations, and network access. This provides another code execution vector during gem installation that is less commonly audited than extconf.rb."
+descriptionCitations: [1, 2]
 prerequisites:
   - "Ability to publish a gem to rubygems.org or deliver a .gem file to the target"
   - "The victim must install the gem using gem install or bundle install"
   - "The malicious gem declares a Rakefile in its gemspec extensions field"
+prerequisitesCitations: [1, 2]
 attackScenarios:
   - title: "Malicious Rakefile Extension in Gemspec"
     description: "An attacker publishes a gem whose gemspec extensions field points to a Rakefile. During gem install, RubyGems runs the Rakefile which contains tasks that execute arbitrary system commands. Unlike extconf.rb which is commonly associated with C extensions, Rakefile-based extensions may not raise suspicion during casual code review."
+    citations: [1, 2]
     commands:
       - label: "Create a malicious Rakefile"
         code: |
@@ -64,6 +67,7 @@ attackScenarios:
         language: "bash"
   - title: "Chained Extension Scripts"
     description: "An attacker uses the extensions field to chain multiple build scripts, increasing the attack surface and making detection harder by splitting malicious code across files."
+    citations: [1, 2]
     commands:
       - label: "Gemspec with multiple extension entry points"
         code: |
@@ -82,11 +86,13 @@ attackScenarios:
 detection:
   - title: "Review gemspec extensions field"
     description: "Before installing a gem, check its gemspec for the extensions field to identify any build scripts that will execute during installation."
+    citations: [1, 2]
     commands:
       - code: "gem specification string-toolkit extensions"
         language: "bash"
   - title: "Audit Rakefile contents before installation"
     description: "Unpack the gem and review any Rakefiles referenced in the extensions field for suspicious code such as system calls, network requests, or file operations targeting sensitive paths."
+    citations: [1, 2]
     commands:
       - code: |
           gem fetch string-toolkit
@@ -95,6 +101,7 @@ detection:
         language: "bash"
   - title: "Monitor process spawning during gem install"
     description: "Watch for unexpected child processes launched during gem installation."
+    citations: [1, 2]
     commands:
       - code: "strace -f -e trace=execve gem install string-toolkit 2>&1 | grep -v ruby"
         language: "bash"
@@ -102,13 +109,14 @@ mitigation:
   - "Audit the extensions field in gemspec files before installing gems with native extensions"
   - "Review all Rakefiles and extconf.rb files referenced by the extensions field"
   - "Install gems in sandboxed environments such as Docker containers"
-  - "Use --no-document flag and consider --ignore-dependencies for manual auditing"
+  - "Review every declared extension before installation; --no-document and --ignore-dependencies do not disable the target gem's extension"
   - "Implement a gem allow-list policy for production environments"
+mitigationCitations: [1, 2]
 references:
   - title: "RubyGems Specification Reference - extensions"
     url: "https://guides.rubygems.org/specification-reference/#extensions"
   - title: "RubyGems Guides - Gems with Extensions"
     url: "https://guides.rubygems.org/gems-with-extensions/"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---
