@@ -1,5 +1,5 @@
 /* ============================================
-   WTFpkg — What The F*** Is In Your Packages
+   WTFpkg - What The F*** Is In Your Packages
    Utilitarian security reference aesthetic
    ============================================ */
 
@@ -884,7 +884,7 @@ main { flex: 1; }
   font-size: 0.75rem;
 }
 
-/* Prism.js overrides — integrate with site theme */
+/* Prism.js overrides - integrate with site theme */
 .code-block-wrapper pre[class*="language-"],
 .code-block-wrapper code[class*="language-"] {
   background: none;

@@ -12,10 +12,12 @@ A defensive security resource documenting how package managers can be abused by 
 |---------|-----------|------------|
 | apt / dpkg | Debian & Ubuntu | Maintainer scripts, GPG bypass, repo injection, MITM |
 | pip / PyPI | Python | setup.py execution, dependency confusion, typosquatting |
-| npm | Node.js | Lifecycle scripts, dependency confusion, npx abuse |
+| npm | Node.js | Lifecycle script policy, dependency confusion, npx abuse |
 | RubyGems | Ruby | Native extensions, plugin hooks, gem source manipulation |
 | Cargo | Rust | build.rs execution, proc macros, crate extraction |
-| Homebrew | macOS | Formula Ruby execution, Cask flight blocks, malicious taps, .pkg privilege escalation |
+| Homebrew | macOS | Third-party tap trust, legacy Cask flight blocks, .pkg privilege escalation |
+
+See [TRADECRAFT.md](TRADECRAFT.md) for sourced candidates that are not yet full technique pages.
 
 ## Local Development
 
@@ -24,7 +26,7 @@ A defensive security resource documenting how package managers can be abused by 
 hugo server --buildDrafts
 ```
 
-Site runs at `http://localhost:1313`.
+Site runs at `http://localhost:1313/WTFpkg/`.
 
 ## Contributing
 

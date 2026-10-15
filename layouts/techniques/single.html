@@ -4,7 +4,7 @@
   <!-- Breadcrumb -->
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="{{ site.Home.RelPermalink }}">WTFpkg</a><span class="sep" aria-hidden="true">/</span>
-    <a href="{{ site.Home.RelPermalink }}#pm={{ .Params.packageManager }}">{{ .Params.packageManager }}</a><span class="sep" aria-hidden="true">/</span>
+    <a href="{{ printf "pm/%s/" .Params.packageManager | relURL }}">{{ .Params.packageManager }}</a><span class="sep" aria-hidden="true">/</span>
     <span aria-current="page">{{ .Params.name }}</span>
   </nav>
 
@@ -34,6 +34,7 @@
   <!-- Description -->
   <div class="technique-description">
     {{ .Params.description | safeHTML }}
+    {{ partial "citations.html" (dict "citations" .Params.descriptionCitations "references" .Params.references) }}
   </div>
 
   <!-- Prerequisites -->
@@ -45,6 +46,7 @@
       <li>{{ . | safeHTML }}</li>
       {{ end }}
     </ul>
+    {{ partial "citations.html" (dict "citations" $.Params.prerequisitesCitations "references" $.Params.references) }}
   </section>
   {{ end }}
 
@@ -52,10 +54,12 @@
   {{ with .Params.attackScenarios }}
   <section class="detail-section" id="attacks">
     <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Attack Scenarios</h2>
+    {{ $page := $ }}
     {{ range . }}
     <div class="scenario-card">
       <h3>{{ .title }}</h3>
       <p>{{ .description | safeHTML }}</p>
+      {{ partial "citations.html" (dict "citations" .citations "references" $page.Params.references) }}
       {{ range .commands }}
       <div class="code-block-wrapper">
         {{ with .label }}<div class="code-label">{{ . }}</div>{{ end }}
@@ -72,10 +76,12 @@
   {{ with .Params.detection }}
   <section class="detail-section" id="detection">
     <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> Detection</h2>
+    {{ $page := $ }}
     {{ range . }}
     <div class="detection-card">
       <h3>{{ .title }}</h3>
       <p>{{ .description | safeHTML }}</p>
+      {{ partial "citations.html" (dict "citations" .citations "references" $page.Params.references) }}
       {{ range .commands }}
       <div class="code-block-wrapper">
         <button class="copy-btn" aria-label="Copy code to clipboard">Copy</button>
@@ -96,6 +102,7 @@
       <li>{{ . | safeHTML }}</li>
       {{ end }}
     </ul>
+    {{ partial "citations.html" (dict "citations" $.Params.mitigationCitations "references" $.Params.references) }}
   </section>
   {{ end }}
 
@@ -104,10 +111,10 @@
   <section class="detail-section" id="references">
     <h2><span class="section-icon" aria-hidden="true">&#x25B8;</span> References</h2>
     <ul class="reference-list">
-      {{ range . }}
-      <li>
-        <a href="{{ .url }}" target="_blank" rel="noopener">
-          <span class="ref-icon" aria-hidden="true">&#x2197;</span> {{ .title }}
+      {{ range $i, $reference := . }}
+      <li id="ref-{{ add $i 1 }}">
+        <a href="{{ $reference.url }}" target="_blank" rel="noopener">
+          <span class="ref-icon" aria-hidden="true">&#x2197;</span> [{{ add $i 1 }}] {{ $reference.title }}
         </a>
       </li>
       {{ end }}

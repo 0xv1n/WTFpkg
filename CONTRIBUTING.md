@@ -28,12 +28,15 @@ platform:
   - "macOS"
   - "Windows"
 description: "A clear explanation of what this technique does, how it works, and why it matters. 2-4 sentences."
+descriptionCitations: [1]
 prerequisites:
   - "What the attacker needs before exploiting this"
   - "e.g. ability to publish a package, network position, etc."
+prerequisitesCitations: [1]
 attackScenarios:
   - title: "Scenario Name"
     description: "What this specific attack does and how."
+    citations: [1]
     commands:
       - label: "Optional label describing this code block"
         code: |
@@ -43,6 +46,7 @@ attackScenarios:
 detection:
   - title: "Detection Method Name"
     description: "How to detect this technique."
+    citations: [1]
     commands:
       - code: |
           # Detection command
@@ -51,13 +55,16 @@ detection:
 mitigation:
   - "Short actionable mitigation step"
   - "Another mitigation step"
+mitigationCitations: [1]
 references:
-  - title: "Reference Title"
-    url: "https://example.com/reference"
-created: 2026-04-02
-updated: 2026-04-02
+  - title: "Primary upstream source title"
+    url: "https://upstream.example.org/documentation"
+created: "YYYY-MM-DD"
+updated: "YYYY-MM-DD"
 ---
 ```
+
+Every factual claim must have a claim-level numeric citation. Citation fields contain one-based numbers that point to entries in `references`; markers render as accessible links such as `[1]` and reference entries receive stable page anchors `ref-1`, `ref-2`, and so on. Add the marker to the field containing the claim: `descriptionCitations`, `prerequisitesCitations`, each `attackScenarios[].citations`, each `detection[].citations`, or `mitigationCitations`. Use primary sources whenever available, such as official package-manager documentation, upstream advisories, vulnerability records, standards, or original research. Cite secondary sources only when a primary source cannot support the claim. The Hugo build reports missing or out-of-range citation numbers.
 
 ### 3. Valid field values
 

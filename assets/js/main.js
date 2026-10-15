@@ -1,4 +1,4 @@
-/* WTFpkg — Main JS */
+/* WTFpkg - Main JS */
 
 // --- Theme Toggle ---
 (function() {

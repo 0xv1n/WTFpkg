@@ -4,7 +4,7 @@ title = "WTFpkg"
 enableRobotsTXT = true
 
 [params]
-  description = "WTFpkg — A defensive security resource documenting how package managers can be abused by adversaries."
+  description = "WTFpkg - A defensive security resource documenting how package managers can be abused by adversaries."
   tagline = "Know the techniques. Defend the supply chain."
 
 [taxonomies]

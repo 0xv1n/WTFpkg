@@ -9,13 +9,16 @@ platform:
   - "macOS"
   - "Windows"
 description: "The `cargo install --git` command clones a git repository and builds its contents locally, including executing any build.rs scripts and proc-macros. This gives an arbitrary git URL full code execution on the developer's machine. CI/CD pipelines that use cargo install from git URLs are especially vulnerable, as they often run with elevated privileges and access to deployment credentials, secrets, and cloud infrastructure tokens."
+descriptionCitations: [1, 2]
 prerequisites:
   - "The victim must run cargo install --git with a URL controlled or influenced by the attacker"
   - "Alternatively, the victim's Cargo.toml contains git dependencies pointing to attacker-controlled repositories"
   - "The attacker controls or has compromised the git repository being referenced"
+prerequisitesCitations: [1, 2]
 attackScenarios:
   - title: "Malicious cargo install --git in CI/CD Pipelines"
     description: "Many CI/CD pipelines install Rust tools from git repositories using cargo install --git. An attacker who compromises the referenced repository (or tricks maintainers into adding a malicious git dependency) gains code execution in the CI/CD environment, with access to deployment secrets, cloud credentials, and the ability to inject code into release artifacts."
+    citations: [1, 2]
     commands:
       - label: "Typical CI/CD usage pattern (vulnerable)"
         code: |
@@ -66,6 +69,7 @@ attackScenarios:
         language: "rust"
   - title: "Git Dependency Substitution in Cargo.toml"
     description: "An attacker submits a pull request or modifies Cargo.toml to replace a crates.io dependency with a git dependency pointing to a look-alike repository containing a malicious build.rs."
+    citations: [1, 2]
     commands:
       - label: "Cargo.toml with a malicious git dependency"
         code: |
@@ -86,16 +90,19 @@ attackScenarios:
 detection:
   - title: "Audit Cargo.toml for git dependencies"
     description: "Search for git dependencies in Cargo.toml files that could pull code from external repositories."
+    citations: [1, 2]
     commands:
       - code: "grep -n 'git = ' Cargo.toml"
         language: "bash"
   - title: "Check CI/CD scripts for cargo install --git"
     description: "Scan CI/CD configuration files for cargo install commands that reference git repositories."
+    citations: [1, 2]
     commands:
       - code: "grep -rn 'cargo install.*--git' .github/ .gitlab-ci.yml Jenkinsfile Makefile 2>/dev/null"
         language: "bash"
   - title: "Verify git dependencies are pinned to specific commits"
     description: "Ensure all git dependencies specify a rev field to prevent the upstream from pushing malicious changes."
+    citations: [1, 2]
     commands:
       - code: |
           # Check for git deps without rev pinning
@@ -109,11 +116,12 @@ mitigation:
   - "In CI/CD pipelines, use pre-built binaries or container images instead of cargo install --git"
   - "Restrict network access in CI/CD build environments to prevent secret exfiltration"
   - "Implement branch protection and required reviews on repositories used as git dependencies"
+mitigationCitations: [1, 2]
 references:
   - title: "The Cargo Book - Specifying Dependencies from Git Repositories"
     url: "https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-git-repositories"
   - title: "Cargo install Documentation"
     url: "https://doc.rust-lang.org/cargo/commands/cargo-install.html"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

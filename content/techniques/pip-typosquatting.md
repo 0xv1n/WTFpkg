@@ -8,14 +8,17 @@ platform:
   - "Linux"
   - "macOS"
   - "Windows"
-description: "Typosquatting on PyPI involves registering package names that are deliberate misspellings, character transpositions, or plausible variations of popular legitimate packages. When users mistype a package name during pip install, they unknowingly install the attacker's malicious package instead. Real-world campaigns have targeted packages like requests (requestss, reqeusts), python-nmap (nmap, python_nmap), and urllib3 (urlib3, urllib). These attacks are highly effective because PyPI performs no similarity checking on package names, and the installed malicious packages often include the legitimate package's functionality to avoid immediate detection."
+description: "Typosquatting on PyPI uses misspellings, character transpositions, or plausible name variations to induce installation of the wrong project. PyPI rejects some names that are too similar to existing projects and preemptively blocks some names for security reasons, but those controls do not cover every confusing name. Published malicious projects may also depend on or imitate the intended package so the mistake is less obvious."
+descriptionCitations: [1, 2, 3, 4, 5, 6, 7]
 prerequisites:
   - "Target popular packages with high download counts that users frequently install manually"
-  - "PyPI account to publish the typosquat package (minimal verification required)"
-  - "The typosquat name is not already registered on PyPI"
+  - "PyPI publishing access that satisfies PyPI's verified-email and two-factor-authentication requirements"
+  - "The candidate name is not registered, prohibited, or rejected as too similar to an existing project"
+prerequisitesCitations: [1, 2, 3, 4, 5, 6, 7]
 attackScenarios:
   - title: "Character duplication and omission typosquats"
     description: "The attacker registers package names with common typing errors: doubled letters, omitted letters, or swapped adjacent characters. The malicious package includes the legitimate package as a dependency so functionality appears normal, while a payload executes during or after installation."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - label: "Typosquat setup.py that wraps the legitimate package"
         code: |
@@ -76,6 +79,7 @@ attackScenarios:
         language: "python"
   - title: "Namespace and separator confusion"
     description: "PyPI normalizes package names by treating hyphens, underscores, and dots as equivalent. However, entirely different naming patterns can be confused: python-nmap vs nmap, python-dateutil vs dateutil. Attackers register the shorter or more intuitive variant that users are likely to guess."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - label: "Common typosquat naming strategies"
         code: |
@@ -103,6 +107,7 @@ attackScenarios:
         language: "python"
   - title: "Real-world PyPI typosquat campaigns"
     description: "Multiple documented typosquat campaigns have been discovered on PyPI, where attackers registered dozens of package names simultaneously, each containing data exfiltration or cryptominer payloads targeting CI/CD environments and developer workstations."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - label: "Example: attacker registers multiple typosquats simultaneously"
         code: |
@@ -125,25 +130,24 @@ attackScenarios:
         language: "python"
 detection:
   - title: "Verify package names before installation"
-    description: "Always verify the exact spelling of a package name on pypi.org before installing. Use pip install --dry-run to preview what would be installed without executing any code."
+    description: "Verify the exact distribution name on pypi.org before installing. `pip install --dry-run` skips the final installation step but can still invoke source-build hooks while preparing metadata, so it is not a safe inspection boundary for an untrusted source distribution."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - code: |
           # Check the correct package name on PyPI
           pip index versions requests
 
-          # Dry run to see what would be installed (pip 22.2+)
-          pip install --dry-run <package-name>
+          # Query index versions without installing the package
+          PACKAGE=requests
+          pip index versions "$PACKAGE"
 
-          # Check package metadata and verify maintainer
-          pip show <package-name>
-
-          # Compare download counts (typosquats have very low counts)
-          # Use the PyPI JSON API
-          curl -s "https://pypi.org/pypi/<package-name>/json" | \
+          # Inspect published metadata through the PyPI JSON API
+          curl -s "https://pypi.org/pypi/$PACKAGE/json" | \
             python3 -c "import json,sys; d=json.load(sys.stdin); print(d['info']['author'], d['info']['summary'])"
         language: "bash"
   - title: "Audit installed packages for potential typosquats"
     description: "Scan installed packages for names suspiciously similar to known popular packages, low download counts, recent registration dates, or mismatched metadata."
+    citations: [1, 2, 3, 4, 5, 6, 7]
     commands:
       - code: |
           # List all installed packages and check for suspicious names
@@ -168,12 +172,13 @@ detection:
         language: "bash"
 mitigation:
   - "Double-check package names against the official PyPI listing before installing"
-  - "Use pip install --dry-run to preview installations without executing code"
+  - "Do not treat pip install --dry-run as a sandbox; inspect untrusted source distributions without invoking pip's build system"
   - "Maintain a curated allowlist of approved packages in requirements.txt or a lockfile"
   - "Use a private package index or caching proxy that only mirrors vetted packages"
   - "Implement automated typosquat detection in CI/CD pipelines using similarity matching"
   - "Copy-paste package names from official documentation rather than typing them manually"
   - "Monitor PyPI for new packages with names similar to your organization's popular internal or external dependencies"
+mitigationCitations: [1, 2, 3, 4, 5, 6, 7]
 references:
   - title: "IQT Labs - pypi-scan: Typosquatting Detection Tool"
     url: "https://github.com/IQTLabs/pypi-scan"
@@ -183,6 +188,12 @@ references:
     url: "https://snyk.io/blog/typosquatting-attacks/"
   - title: "PyPI - Package Name Normalization (PEP 503)"
     url: "https://peps.python.org/pep-0503/#normalized-names"
+  - title: "pip Build System Interface"
+    url: "https://pip.pypa.io/en/stable/reference/build-system/index.html"
+  - title: "PyPI JSON API"
+    url: "https://docs.pypi.org/api/json/"
+  - title: "PyPI Help - Project Name Availability"
+    url: "https://pypi.org/help/#project-name"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

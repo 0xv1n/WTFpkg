@@ -1,0 +1,16 @@
+{{- $citations := .citations -}}
+{{- $references := .references -}}
+{{- if not $citations -}}
+  {{- errorf "missing citations for a factual claim" -}}
+{{- else -}}
+<span class="citations" aria-label="Citations">
+  {{- range $citation := $citations -}}
+    {{- $number := int $citation -}}
+    {{- if or (lt $number 1) (gt $number (len $references)) -}}
+      {{- errorf "invalid citation %q: expected a reference number from 1 to %d" $citation (len $references) -}}
+    {{- else -}}
+      <sup><a href="#ref-{{ $number }}" aria-label="Reference {{ $number }}">[{{ $number }}]</a></sup>
+    {{- end -}}
+  {{- end -}}
+</span>
+{{- end -}}

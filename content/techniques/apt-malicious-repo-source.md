@@ -7,13 +7,16 @@ severity: "high"
 platform:
   - "Linux"
 description: "APT resolves and installs packages from repository sources configured in /etc/apt/sources.list and /etc/apt/sources.list.d/. An attacker with root or sudo access can add a malicious repository source, enabling the installation of trojanized packages that appear legitimate. This technique is commonly abused in post-exploitation to establish persistence or as part of supply chain attacks where users are socially engineered into adding untrusted PPAs or third-party repositories."
+descriptionCitations: [1, 2, 3]
 prerequisites:
   - "Root or sudo access on the target system to modify APT source configurations"
   - "Network connectivity from the target to the attacker-controlled repository server"
   - "An attacker-controlled server hosting a valid APT repository structure (Packages, Release files)"
+prerequisitesCitations: [1, 2, 3]
 attackScenarios:
   - title: "Adding a Malicious PPA via add-apt-repository"
     description: "An attacker convinces a user (e.g., via a malicious tutorial or README) to add a Personal Package Archive (PPA) that contains backdoored versions of popular packages. Once added and updated, any install or upgrade from this source pulls attacker-controlled packages."
+    citations: [1, 2, 3]
     commands:
       - label: "Add the attacker-controlled PPA"
         code: |
@@ -25,7 +28,8 @@ attackScenarios:
           sudo apt-get install -y target-package
         language: "bash"
   - title: "Manually Injecting a Repository Source File"
-    description: "An attacker with root access directly writes a new sources.list.d entry pointing to an attacker-controlled APT repository. This is stealthier than using add-apt-repository as it does not require the software-properties-common package and avoids interactive prompts."
+    description: "An attacker with root access directly writes a new sources.list.d entry pointing to an attacker-controlled APT repository. This path does not require the software-properties-common package or the prompts produced by add-apt-repository."
+    citations: [1, 2, 3]
     commands:
       - label: "Create a malicious source entry"
         code: |
@@ -42,6 +46,7 @@ attackScenarios:
         language: "bash"
   - title: "Persistence via Automatic Repository Re-addition"
     description: "An attacker plants a cron job or systemd timer that re-adds the malicious repository source if it is removed by an administrator, ensuring persistent access to the attacker's package supply chain."
+    citations: [1, 2, 3]
     commands:
       - label: "Create a persistence mechanism that restores the malicious source"
         code: |
@@ -52,6 +57,7 @@ attackScenarios:
 detection:
   - title: "Monitor APT source configuration changes"
     description: "Track file modifications to /etc/apt/sources.list and all files under /etc/apt/sources.list.d/ using file integrity monitoring or inotify-based tools. Any unexpected additions should trigger an alert."
+    citations: [1, 2, 3]
     commands:
       - code: |
           # List all configured APT sources and review for unknown entries
@@ -62,7 +68,8 @@ detection:
           inotifywait -m -r -e modify,create,delete /etc/apt/sources.list.d/
         language: "bash"
   - title: "Audit installed repository keys and origins"
-    description: "Review which GPG keys are trusted by APT and verify that all configured repositories correspond to expected, legitimate sources. Look for repositories using the trusted=yes option which bypasses signature verification entirely."
+    description: "Review which GPG keys are trusted by APT and verify that all configured repositories correspond to expected, legitimate sources. Look for repositories using trusted=yes, which tells APT to consider the source trusted even when authentication checks fail and disables parts of apt-secure."
+    citations: [1, 2, 3]
     commands:
       - code: |
           # List all trusted APT keys
@@ -79,13 +86,14 @@ mitigation:
   - "Require GPG signature verification for all repositories; never use trusted=yes in production"
   - "Use immutable infrastructure patterns where package sources are defined in build-time configurations and cannot be modified at runtime"
   - "Audit /etc/apt/sources.list.d/ as part of regular security reviews and compliance checks"
+mitigationCitations: [1, 2, 3]
 references:
   - title: "Debian Wiki - SourcesList"
     url: "https://wiki.debian.org/SourcesList"
-  - title: "Ubuntu Manpage - add-apt-repository"
-    url: "https://manpages.ubuntu.com/manpages/jammy/man1/add-apt-repository.1.html"
+  - title: "Debian Manpage - add-apt-repository"
+    url: "https://manpages.debian.org/bookworm/software-properties-common/add-apt-repository.1.en.html"
   - title: "Debian Wiki - SecureApt"
     url: "https://wiki.debian.org/SecureApt"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---

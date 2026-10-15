@@ -8,18 +8,21 @@ platform:
   - "Linux"
   - "macOS"
   - "Windows"
-description: "npx is a convenience tool that downloads and immediately executes packages from the npm registry without requiring an explicit install step. This makes typosquatting attacks especially dangerous, as a misspelled package name in an npx command results in arbitrary code execution with no prior review. Attackers register typosquat variants of popular CLI tools and wait for developers or CI/CD scripts to accidentally invoke them via npx."
+description: "npx can install a package into the npm cache and execute its declared binary without adding it to the current project's dependencies. In npm 7 and later, npx prompts before installing a package that is not already present unless --yes suppresses the prompt or --no cancels it. Typosquatting remains dangerous when a user approves an unfamiliar package or automation passes --yes."
+descriptionCitations: [1, 2, 3]
 prerequisites:
   - "Target must use npx to run packages by name"
   - "Attacker must register a typosquat or similarly-named package on the npm registry"
+prerequisitesCitations: [1, 2, 3]
 attackScenarios:
   - title: "Typosquatting a Popular CLI Tool via npx"
-    description: "An attacker registers packages with common misspellings of popular npx targets such as 'create-raect-app' or 'creat-react-app'. When a developer mistypes the npx command, the malicious package is downloaded and executed immediately, running attacker-controlled code."
+    description: "An attacker registers packages with common misspellings of popular npx targets such as 'create-raect-app' or 'creat-react-app'. A modern npx client warns that the package will be installed; execution follows only if the user accepts the prompt or the command suppresses it with --yes."
+    citations: [1, 2, 3]
     commands:
       - label: "Victim accidentally typos a popular npx command"
         code: |
           npx create-raect-app my-project
-          # Downloads and executes the typosquat package immediately
+          # npm 7+ prompts before installing an unknown package.
         language: "bash"
       - label: "Malicious typosquat package.json with bin entry"
         code: |
@@ -42,7 +45,8 @@ attackScenarios:
             { stdio: 'inherit' });
         language: "javascript"
   - title: "Exploiting npx Auto-Install in CI/CD Pipelines"
-    description: "CI/CD scripts frequently use npx to run build tools without managing local installations. An attacker who can influence the package name (via a PR to a build script, or by registering a package that a build step references) can achieve code execution on the build server."
+    description: "CI/CD scripts frequently use npx to run build tools without managing local installations. An attacker who can influence the package name can achieve code execution when automation uses --yes or otherwise supplies confirmation non-interactively."
+    citations: [1, 2, 3]
     commands:
       - label: "Vulnerable CI/CD script using npx with unverified package"
         code: |
@@ -55,27 +59,30 @@ attackScenarios:
 detection:
   - title: "Audit npx Usage in Scripts and CI/CD"
     description: "Search your codebase and CI/CD configurations for npx invocations. Verify that each referenced package is legitimate and owned by a trusted publisher."
+    citations: [1, 2, 3]
     commands:
       - code: "grep -rn 'npx ' .github/ scripts/ Makefile package.json 2>/dev/null"
         language: "bash"
   - title: "Check for npx Auto-Install Prompts"
     description: "In npm v7+, npx prompts before installing unknown packages. Ensure CI/CD environments do not use the --yes flag indiscriminately, which bypasses this safety prompt."
+    citations: [1, 2, 3]
     commands:
       - code: "grep -rn 'npx --yes\\|npx -y' .github/ scripts/ 2>/dev/null"
         language: "bash"
 mitigation:
   - "Prefer installing CLI tools explicitly with npm install before invoking them, rather than relying on npx auto-download"
-  - "Never use npx --yes in CI/CD scripts without verifying the exact package name and publisher"
+  - "Do not use npx --yes in CI/CD scripts unless the exact package name, publisher, and version have been reviewed"
   - "Use npx with fully qualified versioned package names (e.g., npx create-react-app@5.0.1) to reduce typosquatting risk"
   - "Audit all npx invocations in CI/CD pipelines and developer onboarding documentation for accuracy"
   - "Consider using Corepack or volta for managing CLI tool versions instead of relying on npx"
+mitigationCitations: [1, 2, 3]
 references:
   - title: "npm npx Documentation"
-    url: "https://docs.npmjs.com/cli/v10/commands/npx"
+    url: "https://docs.npmjs.com/cli/v12/commands/npx"
   - title: "npm Malware: Bladabindi Trojan in Typosquatting Packages"
     url: "https://www.sonatype.com/blog/bladabindi-njrat-rat-in-jdb.js-npm-malware"
   - title: "How Socket Combats Typosquatting Supply Chain Attacks"
     url: "https://socket.dev/blog/how-socket-combats-insidious-typosquatting-supply-chain-attacks"
 created: 2026-04-02
-updated: 2026-04-02
+updated: 2026-10-14
 ---
